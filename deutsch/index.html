@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Schablone einer begründeten Stellungnahme</title>
+<style>
+:root{
+  --bg:#fbfaf8; --fg:#1c1917; --muted:#78716c; --line:#e7e5e4; --card:#ffffff;
+  --bar:#ffffff; --barfg:#1c1917;
+  --beweggrund-bg:#dbeafe; --beweggrund-fg:#1e40af;
+  --beleg-bg:#e7e5e4;      --beleg-fg:#44403c;
+  --these-bg:#fee2e2;      --these-fg:#b91c1c;
+  --begruendung-bg:#fef3c7;--begruendung-fg:#b45309;
+  --einwand-bg:#dcfce7;    --einwand-fg:#15803d;
+  --entkraeftung-bg:#cffafe;--entkraeftung-fg:#0e7490;
+  --fazit-bg:#f3e8ff;      --fazit-fg:#7e22ce;
+  --fs:19px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1917; --fg:#f5f5f4; --muted:#a8a29e; --line:#57534e; --card:#292524;
+    --bar:#292524; --barfg:#f5f5f4;
+    --beweggrund-bg:#1e3a8a;  --beweggrund-fg:#dbeafe;
+    --beleg-bg:#57534e;       --beleg-fg:#f5f5f4;
+    --these-bg:#7f1d1d;       --these-fg:#fee2e2;
+    --begruendung-bg:#78350f; --begruendung-fg:#fef3c7;
+    --einwand-bg:#14532d;     --einwand-fg:#dcfce7;
+    --entkraeftung-bg:#164e63;--entkraeftung-fg:#cffafe;
+    --fazit-bg:#581c87;       --fazit-fg:#f3e8ff;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+  -webkit-text-size-adjust:100%; overflow-x:hidden;
+}
+.ui{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+
+/* ---------- Leiste ---------- */
+.bar{
+  position:sticky; top:0; z-index:50;
+  background:var(--bar); color:var(--barfg);
+  border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 6px) 8px 6px;
+  box-shadow:0 1px 8px rgba(0,0,0,.06);
+}
+.row{display:flex; align-items:center; gap:8px}
+.nav{
+  flex:0 0 auto; width:50px; height:42px; border-radius:11px;
+  border:1px solid var(--line); background:var(--card); color:var(--barfg);
+  font-size:22px; line-height:1; cursor:pointer; touch-action:manipulation;
+  display:flex; align-items:center; justify-content:center;
+}
+.nav:active{transform:scale(.95)}
+.nav:disabled{opacity:.3}
+.count{font-size:12px; color:var(--muted); letter-spacing:.04em;
+  white-space:nowrap; margin-left:2px; font-variant-numeric:tabular-nums}
+.tools{flex:1 1 auto; min-width:0; display:flex; gap:6px;
+  justify-content:center; align-items:center; flex-wrap:nowrap}
+.tool{
+  border:1px solid var(--line); background:var(--card); color:var(--barfg);
+  border-radius:9px; height:34px; padding:0 12px; font-size:13px; cursor:pointer;
+  touch-action:manipulation; white-space:nowrap;
+}
+.tool[aria-pressed="true"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+.progress{height:3px; background:var(--line); border-radius:2px; margin-top:6px; overflow:hidden}
+.progress i{display:block; height:100%; background:var(--fg); transition:width .25s ease}
+
+/* ---------- Text ---------- */
+main{max-width:46em; margin:0 auto; padding:22px 16px 40vh}
+p{font-size:var(--fs); line-height:1.65; margin:0 0 1em; hyphens:auto}
+.lbl{
+  display:none; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:11px!important; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 6px; line-height:1.3;
+}
+.part{margin:0 0 6px; padding:6px; border:2px dashed transparent; border-radius:12px;
+  transition:border-color .2s, background .2s}
+body.macro .part{border-color:var(--muted); background:rgba(120,113,108,.06); margin-bottom:14px}
+body.macro .part>.lbl{display:block}
+.part.hide{display:none}
+
+.block{padding:6px; border:2px solid transparent; border-radius:12px;
+  transition:border-color .2s, background .2s}
+body.blocks .block{border-color:var(--line); background:var(--card); margin-bottom:14px}
+body.blocks .block>.lbl{display:block}
+.block.hide{display:none}
+.block.focused{border:2px dashed var(--muted); background:var(--card); padding:16px 14px}
+.block.focused>.lbl{display:block}
+
+/* ---------- Rollen ---------- */
+.r{border-radius:4px; transition:background-color .2s, color .2s;
+   -webkit-box-decoration-break:clone; box-decoration-break:clone}
+.r.on{padding:.12em .18em}
+.r.on[data-role="beweggrund"]  {background:var(--beweggrund-bg);   color:var(--beweggrund-fg)}
+.r.on[data-role="beleg"]       {background:var(--beleg-bg);        color:var(--beleg-fg)}
+.r.on[data-role="these"]       {background:var(--these-bg);        color:var(--these-fg)}
+.r.on[data-role="begruendung"] {background:var(--begruendung-bg);  color:var(--begruendung-fg)}
+.r.on[data-role="einwand"]     {background:var(--einwand-bg);      color:var(--einwand-fg)}
+.r.on[data-role="entkraeftung"]{background:var(--entkraeftung-bg); color:var(--entkraeftung-fg)}
+.r.on[data-role="fazit"]       {background:var(--fazit-bg);        color:var(--fazit-fg)}
+.r.on.lab::before{
+  content:attr(data-label); display:inline-block; vertical-align:.1em;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:.58em; font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+  padding:.18em .5em; margin-right:.45em; border-radius:99px;
+  background:var(--card); color:inherit; border:1px solid currentColor;
+  white-space:nowrap;
+}
+
+/* ---------- Panel ---------- */
+.panel{
+  position:fixed; left:0; right:0; bottom:0; z-index:60;
+  background:var(--card); border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(0,0,0,.16);
+  padding:14px 16px calc(env(safe-area-inset-bottom) + 16px);
+  max-height:72vh; overflow:auto; transform:translateY(105%); transition:transform .28s ease;
+}
+.panel.open{transform:translateY(0)}
+.panel h2{margin:0 0 10px; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.leg{display:grid; gap:7px; margin:0; padding:0; list-style:none;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:15px}
+.leg li{display:grid; grid-template-columns:24px 1fr; gap:10px; align-items:start; line-height:1.4}
+.leg .no{font-weight:800; color:var(--muted); text-align:right}
+.leg b{display:inline-block; padding:.12em .5em; border-radius:5px; font-size:.82em;
+  letter-spacing:.06em; text-transform:uppercase}
+.leg small{display:block; color:var(--muted); font-size:.88em; margin-top:2px}
+.k-beweggrund  {background:var(--beweggrund-bg);   color:var(--beweggrund-fg)}
+.k-beleg       {background:var(--beleg-bg);        color:var(--beleg-fg)}
+.k-these       {background:var(--these-bg);        color:var(--these-fg)}
+.k-begruendung {background:var(--begruendung-bg);  color:var(--begruendung-fg)}
+.k-einwand     {background:var(--einwand-bg);      color:var(--einwand-fg)}
+.k-entkraeftung{background:var(--entkraeftung-bg); color:var(--entkraeftung-fg)}
+.k-fazit       {background:var(--fazit-bg);        color:var(--fazit-fg)}
+.note{margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:14px; color:var(--muted); line-height:1.5}
+@media (min-width:700px){ :root{--fs:21px} main{padding-top:28px} }
+@media print{ .bar,.panel{display:none} .hide{display:block!important} }
+</style>
+</head>
+<body>
+
+<header class="bar ui">
+  <div class="row">
+    <button class="nav" id="prev" aria-label="Zurück">‹</button>
+    <div class="tools">
+      <button class="tool" id="fsm" aria-label="Schrift kleiner">A−</button>
+      <button class="tool" id="fsp" aria-label="Schrift größer">A+</button>
+      <button class="tool" id="legbtn" aria-pressed="false">Legende</button>
+      <span class="count"><span id="cur">1</span>/<span id="tot">14</span></span>
+    </div>
+    <button class="nav" id="next" aria-label="Weiter">›</button>
+  </div>
+  <div class="progress"><i id="bar"></i></div>
+</header>
+
+<main id="doc">
+
+<section class="part" data-part="einleitung">
+  <p class="lbl">Einleitung</p>
+  <p>Bens Beweggründe sind hauptsächlich heteronomer Natur. Sein Handeln richtet sich häufig nach den Erwartungen und Urteilen anderer.</p>
+</section>
+
+<section class="part" data-part="hauptteil">
+  <p class="lbl">Hauptteil</p>
+
+  <article class="block" data-block="1">
+    <p class="lbl">Beweggrund 1 — Rainbows Zusage</p>
+    <p><span class="r" data-role="beweggrund" data-label="Beweggrund">Ein Beispiel dafür ist sein Wunsch, die Demütigung zu tilgen, von Rainbow lediglich als ein Mitleidsfall behandelt worden zu sein.</span> <span class="r" data-role="beleg" data-label="Beleg">Dieser Beweggrund zeigt sich darin, dass Ben die Zusage von Rainbow „Klar, warum nicht?“ (Z. 129) zu einem gemeinsamen sofort als ein aus Mitleid erfolgtes Zugeständnis interpretiert. „Und einen Moment hab ich gedacht, dass ich ein Glückspilz bin, aber dann habe ich kapiert, dass ich nur ein Krüppel bin.&quot; (Z. 129 ff.)</span> <span class="r" data-role="these" data-label="These">Dieser Beweggrund ist emotional nachvollziehbar, aber sachlich ungesichert.</span> <span class="r" data-role="begruendung" data-label="Begründung">Denn Ben überprüft seine Vermutung nicht. Rainbows Aussage könnte zwar, wie Ben vermutet, aus Mitleid erfolgt sein, ebenso könnte sie jedoch auf einem tatsächlichen Interesse an ihm beruhen. Ben entscheidet sich für die kränkende Interpretation und erklärt diese zur Tatsache.</span> <span class="r" data-role="einwand" data-label="Einwand">Dagegen könnte man einwenden, dass Menschen mit Behinderung aufgrund wiederholter Erfahrungen möglicherweise besonders sensibel dafür sind, wenn ihnen aus Mitleid begegnet wird.</span> <span class="r" data-role="entkraeftung" data-label="Entkräftung">Dieser Einwand trifft zwar zu, entbindet Ben jedoch nicht davon, seine Vermutung zu hinterfragen. Eine Vermutung darf erst dann als Tatsache behandelt werden, wenn man nach den besten Mitteln seiner Vernunft versucht hat, sie zu widerlegen.</span> <span class="r" data-role="fazit" data-label="Fazit">Sein Gefühl ist legitim, aber die Reaktion auf sein Gefühl ist problematisch. Er begibt sich auf Basis seiner ungeprüften Interpretation in eine lebensgefährliche Situation. Damit steht die Gefahr, in die er sich begibt, in keinem angemessenen Verhältnis zu der Gewissheit, mit der er seine eigene Interpretation als Tatsache behandelt.</span></p>
+  </article>
+
+  <article class="block" data-block="2">
+    <p class="lbl">Beweggrund 2 — Die Maskottchen-Rolle</p>
+    <p><span class="r" data-role="beweggrund" data-label="Beweggrund">Ein weiterer Beweggrund Bens ist, dass er nicht länger als Maskottchen seiner Freundesgruppe verstanden werden will.</span> <span class="r" data-role="beleg" data-label="Beleg">Das zeigt sich an der Stelle, an der Johnny ihm zuruft: „Du bist doch unser Maskottchen!&quot;, und Ben für sich antwortet: „Aber ich hab keinen Bock, den Rest meines Lebens bloß das Scheißmaskottchen von anderen Leuten zu sein.&quot;</span> <span class="r" data-role="these" data-label="These">Ich halte diesen Beweggrund für berechtigt.</span> <span class="r" data-role="begruendung" data-label="Begründung">Denn Ben verlangt hier nichts anderes als das, was jedem Menschen zusteht. „Maskottchen&quot; ist ein Funktionsbegriff. Es soll der Gruppe Glück bringen und begleitet sie, ist aber am Geschehen selbst nicht beteiligt. Wer so bezeichnet wird, ist über seinen Nutzen für andere bestimmt und nicht über sich selbst. Genau das trifft Bens Stellung. Johnny nimmt ihn zu Wettkämpfen mit, Piet trägt ihn die Treppe hinauf, und sein Wissen über das Skaten bleibt „zumindest theoretisch&quot;. Er ist dabei, aber er handelt nicht. Bezeichnend ist, womit Johnny ihn im entscheidenden Moment zurückhalten will, denn Johnny argumentiert nicht mit Bens eigener Sicherheit, sondern mit „Wir brauchen dich noch! Du bist doch unser Maskottchen!&quot; Die Sorge um Ben wird in der Sprache seines Nutzens vorgetragen. Niemand sollte jedoch ausschließlich über seine Funktion für andere bestimmt werden. Jeder hat das Recht, als eigener Zweck zu gelten und nicht nur als Mittel für fremde Zwecke. Ben fordert nichts darüber hinaus. Wer sich dagegen wehrt, beweist damit keinen Undank, sondern Selbstachtung.</span> <span class="r" data-role="einwand" data-label="Einwand">Dagegen könnte man einwenden, dass Bens Freunde ihn keineswegs bloß benutzen. Piet trägt ihn hoch, obwohl er die Aktion für falsch hält, „weil er weiß, dass mir das hier wirklich wichtig ist.&quot; Johnny versucht ihn zurückzuhalten, und in seiner Stimme liegt Angst.</span> <span class="r" data-role="entkraeftung" data-label="Entkräftung">Dieser Einwand trifft zu, und er relativiert Bens Deutung. Seine Freunde behandeln ihn nicht als Sache. Er entkräftet den Beweggrund aber nicht, weil es hier nicht um die Gesinnung der Einzelnen geht, sondern um die Rolle, die ihm alle gemeinsam zuweisen. Niemand in dieser Gruppe ist auf den Gedanken gekommen, wie Ben mitmachen könnte. Sie nehmen ihn mit, statt ihn zum Akteur werden zu lassen. Ben bringt das selbst auf den Punkt: „Wenn es auf dieser Welt einigermaßen gerecht zugehen würde, würde mir Johnny beibringen, wie man sie richtig kaut.“ (Z. 92 ff.)</span> <span class="r" data-role="fazit" data-label="Fazit">Insgesamt ist Bens Anspruch also berechtigt, die Art seiner Einlösung jedoch nicht. Sein Ziel besteht darin, nicht länger auf seinen Nutzen für andere reduziert zu werden. Für dieses Ziel setzt er ausgerechnet seine körperliche Unversehrtheit aufs Spiel. Damit gerät sein Handeln in Widerspruch zu dem Anspruch, den es durchsetzen soll. Er verlangt, als Zweck an sich selbst behandelt zu werden, und behandelt dabei sich selbst als bloßes Mittel.</span></p>
+  </article>
+
+  <article class="block" data-block="3">
+    <p class="lbl">Beweggrund 3 — Die Heldenideale</p>
+    <p><span class="r" data-role="beweggrund" data-label="Beweggrund">Auch das Nacheifern seiner Heldenideale ist ein zentraler Beweggrund für Ben. Er wäre gerne so wie Chuck Norris oder die Jackass-Gruppe.</span> <span class="r" data-role="beleg" data-label="Beleg">Das zeigt sich daran, dass die Chuck-Norris-Witze die gesamte Erzählung rahmen, dass die Gruppe zuvor „Jackass“ geschaut hat und dass Ben direkt vor dem Absprung zu sich selbst flüstert: „Chuck Norris hat bis unendlich gezählt. Zweimal!&quot; Außerdem beschreibt er selbst, wie die Jackass-Gruppe „alle möglichen anderen krassen Kamikaze-Aktionen&quot; machte. (Z. 115 f.)</span> <span class="r" data-role="these" data-label="These">Der Beweggrund ist besonders problematisch.</span> <span class="r" data-role="begruendung" data-label="Begründung">Denn er weiß, dass es sich um Selbstzerstörung handelt, und ahmt sie dennoch nach. Ben übernimmt die Maßstäbe seiner Vorbilder, weil er Mut mit Übertreibung verwechselt und ein Unterhaltungsformat zum Vorbild für sein eigenes Handeln macht. Diese Einschätzung lässt sich durch vier Aspekte begründen. Erstens ist Mut nichts, wovon man möglichst viel haben sollte. Nach Aristoteles ist echte Tapferkeit die goldene Mitte zwischen zwei Fehlern. Derjenige, der zu wenig Mut besitzt, ist feige, während derjenige, der zu viel Mut hat, tollkühn ist. Tapfer ist somit nicht derjenige, der das größte Risiko eingeht, sondern derjenige, der in einer konkreten Situation das angemessene Maß findet. Zweitens ist dieses angemessene Maß nicht für jeden Menschen und jede Situation identisch. Es hängt vom Handelnden und den jeweiligen Umständen ab. Ben übernimmt jedoch ausgerechnet Vorbilder, deren Darstellung durch extreme und inszenierte Formen von Mut geprägt sind. Er orientiert sich also nicht an einem vernünftigen Maß, sondern an einer Übertreibung. Hinzu kommt, dass die von ihm nachgeahmten Handlungen bereits für körperlich gesunde Menschen extrem und riskant wären. Das Risiko ist für Ben höher und deshalb bräuchte er ein eigenes Maß. Drittens zielt Bens Tat gar nicht auf Tapferkeit ab, sondern auf den Anschein von Tapferkeit. Aristoteles erklärt, dass tollkühne Personen vor allem als tapfer erscheinen wollen. Er inszeniert sich mit einem Victory-Zeichen vor der Kamera und beauftragt Piet, das Video unabhängig vom Ausgang hochzuladen. Wenn es ihm allein darum ginge, seine Angst zu überwinden, wäre diese öffentliche Inszenierung nicht notwendig. Viertens lässt sich Tapferkeit nicht in einem einzigen Akt erwerben. Für Aristoteles ist Tugend keine einzelne Handlung, sondern eine dauerhafte Haltung, die sich durch wiederholtes tugendhaftes Handeln entwickelt. Ben versucht hingegen, durch den einmaligen Sprung einen Beweis für seine eigene Tapferkeit zu liefern und dadurch zu einem anderen Menschen zu werden. Diesen vier Punkten liegt die gleiche Ursache zu Grunde. Denn Ben weicht Situationen aus, in denen er tatsächlich Mut und Selbstüberwindung zeigen müsste. Er kann Piet nicht sagen, dass Piet sein bester Freund ist. (vgl. Z. 36 ff.) Er kann Rainbow nicht fragen, wie ihr „Klar, warum nicht?“ (Z.129) gemeint war und den Konflikt mit seinem Vater erfindet er lieber, als ihn zu führen. Seine Tollkühnheit beim Sprung erscheint vor diesem Hintergrund nicht als das Gegenteil seiner Feigheit, sondern vielmehr als deren Überkompensation. Weil ihm an den entscheidenden Stellen der Mut fehlt, versucht er, durch eine extreme Tat das Gegenteil von sich selbst zu beweisen.</span> <span class="r" data-role="einwand" data-label="Einwand">Dagegen könnte man einwenden, dass Vorbilder Mut machen und dass genau das ist, was Ben fehlt.</span> <span class="r" data-role="entkraeftung" data-label="Entkräftung">Bei Ben erfüllen seine Vorbilder diese Funktion jedoch nicht. Sie ermutigen ihn nicht dazu, in alltäglichen Situationen ein angemessenes Maß an Mut zu entwickeln, sondern führen ihn dazu, das Gegenteil zu tun. Er versucht, seine Unsicherheit durch eine extreme und körperlich gefährliche Handlung zu überwinden.</span> <span class="r" data-role="fazit" data-label="Fazit">Insgesamt führen seine Heldenideale Ben daher nicht zu einem gesunden Maß an Mut, sondern zu dessen Überkompensation. Statt die Feigheit zu überwinden, die ihn an anderen Stellen zurückhält, versucht er, sie durch eine spektakuläre und potenziell lebensgefährliche Tat zu verdecken.</span></p>
+  </article>
+
+  <article class="block" data-block="4">
+    <p class="lbl">Beweggrund 4 — Kontrolle über den eigenen Körper</p>
+    <p><span class="r" data-role="beweggrund" data-label="Beweggrund">Der vierte Beweggrund Bens ist, dass er erleben will, wie sein Körper ihm gehorcht, statt ihn zu begrenzen.</span> <span class="r" data-role="beleg" data-label="Beleg">Diesen kann man daran erkennen, dass er seine Beine „diese dummen, nutzlosen Anhängsel“ nennt und gleichzeitig oben auf der Halfpipe denkt: „Jetzt balanciere ich nur noch auf den Hinterreifen, es ist ein geiles Gefühl, den Rolli so unter Kontrolle zu haben.“</span> <span class="r" data-role="these" data-label="These">Damit fällt dieser Beweggrund aus der Reihe, denn er ist nicht heteronom. Ich halte ihn deshalb für den ehrlichsten und nachvollziehbarsten seiner Beweggründe.</span> <span class="r" data-role="begruendung" data-label="Begründung">Ben will an dieser Stelle niemandem etwas beweisen. Ben strebt an dieser Stelle nicht nach Anerkennung, sondern nach der unmittelbaren Erfahrung, seinen Körper selbst kontrollieren zu können. Es geht weder um fremde Personen noch um den Anschein, den er bei der Außenwelt bewirken möchte, stattdessen geht es um Bens Verhältnis zu sich selbst. Der Rollstuhl wird von einem Gegenstand, der ihn fesselt, zu einem Gegenstand, der beherrscht wird.</span> <span class="r" data-role="einwand" data-label="Einwand">Dagegen könnte man einwenden, dass eben dieses Hochgefühl für die Ausblendung der potenziellen Gefahren sorgt und er damit nicht mehr rational entscheiden kann.</span> <span class="r" data-role="entkraeftung" data-label="Entkräftung">Dieser Einwand trifft auch zu, jedoch entwertet er den Beweggrund nicht, sondern die Reaktion auf jenen Beweggrund.</span> <span class="r" data-role="fazit" data-label="Fazit">Dieser ist absolut nachvollziehbar, jedoch fehlt Ben die notwendige Vorbereitung oder eine rationale Evaluierung der ansonsten zur Verfügung stehenden Optionen. Denn er könnte das Gefühl der Autonomie auch durch kleinere, progressiv gesteigerte Stunts erwerben.</span></p>
+  </article>
+</section>
+
+<section class="part" data-part="schluss">
+  <p class="lbl">Schluss</p>
+  <p>Abschließend lässt sich sagen, dass Bens Beweggründe emotional durchweg nachvollziehbar sind, seine Reaktionen auf sie jedoch nicht. Sie sind geprägt von Selbstüberschätzung, von Gleichgültigkeit gegenüber der eigenen Unversehrtheit und von dem Wunsch, mutig zu erscheinen, statt es zu werden. Bezeichnend ist dabei, wie wenige Beweggründe aus Ben selbst entspringen. Alle Beweggründe bis auf den vierten sind dadurch gekennzeichnet, dass sie heteronomer statt autonomer Natur sind. Sie richten sich nach fremden Blicken, fremden Maßen und fremden Urteilen. Ben zeigt mehrmals auf, indem er sich selbst korrigiert oder zugibt, gelogen zu haben, dass er ein Vermögen zur Selbstreflexion hat. Problematisch ist jedoch, dass er seine Fähigkeit zur Selbstreflexion gerade in den entscheidenden Momenten nicht ausreichend nutzt, in denen es um sein eigenes Leben und seine körperliche Unversehrtheit geht.</p>
+</section>
+
+</main>
+
+<div class="panel ui" id="panel">
+  <h2>Die Schablone</h2>
+  <ol class="leg">
+    <li><span class="no">1</span><div><b class="k-beweggrund">Beweggrund</b><small>„Ein Beweggrund Bens ist, dass …“ — nennen, neutral</small></div></li>
+    <li><span class="no">2</span><div><b class="k-beleg">Beleg</b><small>„Das zeigt sich daran, dass …“ — Textstelle + Zeile</small></div></li>
+    <li><span class="no">3</span><div><b class="k-these">These</b><small>„Ich halte diesen Beweggrund für …“ — nur dein Urteil, ohne Begründung</small></div></li>
+    <li><span class="no">4</span><div><b class="k-begruendung">Begründung</b><small>„Denn …“ — warum dein Urteil zutrifft</small></div></li>
+    <li><span class="no">5</span><div><b class="k-einwand">Einwand</b><small>„Dagegen könnte man einwenden, dass …“</small></div></li>
+    <li><span class="no">6</span><div><b class="k-entkraeftung">Entkräftung</b><small>„Das überzeugt jedoch nicht, weil …“</small></div></li>
+    <li><span class="no">7</span><div><b class="k-fazit">Fazit</b><small>„Insgesamt …“ — abwägendes Urteil</small></div></li>
+  </ol>
+  <p class="note">Die Schablone gilt <strong>pro Argument</strong>, nicht pro Aufsatz. Einleitung und Schluss stehen außerhalb — sie rahmen sie nur.</p>
+</div>
+
+<script>
+(function(){
+  var ROLES=["beweggrund","beleg","these","begruendung","einwand","entkraeftung","fazit"];
+  var S=[
+    {cap:"Der Text",                                        mode:"plain"},
+    {cap:"Makrostruktur: Einleitung — Hauptteil — Schluss",  mode:"macro"},
+    {cap:"Der Hauptteil: vier Beweggründe",                  mode:"blocks"},
+    {cap:"Wir sehen uns den ersten genauer an",              mode:"focus", block:1, roles:0},
+    {cap:"1 — Beweggrund: Was will Ben?",                    mode:"focus", block:1, roles:1, lab:1},
+    {cap:"2 — Beleg: Woran sieht man das?",                  mode:"focus", block:1, roles:2, lab:1},
+    {cap:"3 — These: Was halte ich davon?",                  mode:"focus", block:1, roles:3, lab:1},
+    {cap:"4 — Begründung: Warum finde ich das?",             mode:"focus", block:1, roles:4, lab:1},
+    {cap:"5 — Einwand: Was sagt die Gegenseite?",            mode:"focus", block:1, roles:5, lab:1},
+    {cap:"6 — Entkräftung: Warum überzeugt das nicht?",      mode:"focus", block:1, roles:6, lab:1},
+    {cap:"7 — Fazit: Wie lautet mein Urteil?",               mode:"focus", block:1, roles:7, lab:1},
+    {cap:"Sieben Schritte — immer in dieser Reihenfolge",    mode:"focus", block:1, roles:7, lab:1, panel:1},
+    {cap:"Dasselbe Gerüst, viermal — nur der Inhalt wechselt", mode:"all"},
+    {cap:"Abschreiben — das gilt für jedes Fach",            mode:"plain", panel:1}
+  ];
+  var i=0, prevKey=null, body=document.body;
+  var cur=document.getElementById("cur"),
+      tot=document.getElementById("tot"), bar=document.getElementById("bar"),
+      panel=document.getElementById("panel"), legbtn=document.getElementById("legbtn"),
+      prev=document.getElementById("prev"), next=document.getElementById("next");
+  var blocks=[].slice.call(document.querySelectorAll(".block"));
+  var parts=[].slice.call(document.querySelectorAll(".part"));
+  var spans=[].slice.call(document.querySelectorAll(".r"));
+  tot.textContent=S.length;
+  var manualPanel=false;
+
+  function render(scroll){
+    var s=S[i], lastNew=null;
+    body.className="";
+    parts.forEach(function(p){p.classList.remove("hide")});
+    blocks.forEach(function(b){b.classList.remove("hide","focused")});
+    spans.forEach(function(x){x.classList.remove("on","lab")});
+
+    if(s.mode==="macro") body.classList.add("macro");
+    if(s.mode==="blocks"||s.mode==="all") body.classList.add("blocks");
+
+    if(s.mode==="focus"){
+      parts.forEach(function(p){ if(p.dataset.part!=="hauptteil") p.classList.add("hide"); });
+      blocks.forEach(function(b){
+        if(+b.dataset.block===s.block) b.classList.add("focused"); else b.classList.add("hide");
+      });
+      for(var k=0;k<(s.roles||0);k++){
+        var sel='.block[data-block="'+s.block+'"] .r[data-role="'+ROLES[k]+'"]';
+        var els=[].slice.call(document.querySelectorAll(sel));
+        els.forEach(function(x){ x.classList.add("on"); if(s.lab) x.classList.add("lab"); });
+        if(k===s.roles-1) lastNew=els[0];
+      }
+    }
+    if(s.mode==="all") spans.forEach(function(x){x.classList.add("on")});
+
+    cur.textContent=i+1;
+    bar.style.width=((i+1)/S.length*100)+"%";
+    prev.disabled=(i===0); next.disabled=(i===S.length-1);
+    if(!manualPanel) setPanel(!!s.panel);
+
+    var key=s.mode+"|"+(s.block||"");
+    if(scroll!==false){
+      if(key!==prevKey){
+        window.scrollTo({top:0,behavior:"smooth"});
+      }else if(lastNew){
+        var box=lastNew.getBoundingClientRect();
+        var topEdge=document.querySelector(".bar").offsetHeight+12;
+        if(box.top<topEdge||box.top>window.innerHeight-60)
+          lastNew.scrollIntoView({behavior:"smooth",block:"center"});
+      }
+    }
+    prevKey=key;
+  }
+  function setPanel(open){
+    panel.classList.toggle("open",open);
+    legbtn.setAttribute("aria-pressed",open?"true":"false");
+  }
+  function go(d){ var n=i+d; if(n<0||n>=S.length) return; i=n; manualPanel=false; render(); }
+
+  prev.onclick=function(){go(-1)}; next.onclick=function(){go(1)};
+  legbtn.onclick=function(){ manualPanel=true; setPanel(!panel.classList.contains("open")); };
+
+  document.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"||e.key===" "||e.key==="PageDown"){e.preventDefault();go(1)}
+    if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();go(-1)}
+    if(e.key==="Escape"){manualPanel=true;setPanel(false)}
+  });
+
+  var x0=null,y0=null;
+  document.addEventListener("touchstart",function(e){
+    if(e.touches.length!==1)return; x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(x0===null)return;
+    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+    if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*2) go(dx<0?1:-1);
+    x0=y0=null;
+  },{passive:true});
+
+  var fs=19;
+  function setFs(v){ fs=Math.max(14,Math.min(34,v)); document.documentElement.style.setProperty("--fs",fs+"px"); }
+  document.getElementById("fsm").onclick=function(){setFs(fs-1)};
+  document.getElementById("fsp").onclick=function(){setFs(fs+1)};
+
+  render(false);
+})();
+</script>
+</body>
+</html>
