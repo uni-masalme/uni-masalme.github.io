@@ -1,0 +1,73 @@
+/* auswertung.css — nur für admin.html, ergänzt stil.css */
+
+.live{color:var(--ok); font-weight:600}
+.schalter{display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--ink-2); cursor:pointer; margin-right:4px}
+.schalter input{width:18px; height:18px; accent-color:var(--blau)}
+
+.kennzahlen{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:6px}
+.kennzahlen .karte{margin-bottom:10px}
+.zahl{font-family:'DM Serif Display',Georgia,serif; font-size:40px; line-height:1.05; color:var(--blau)}
+.zahl small{font-family:'DM Sans',sans-serif; font-size:16px; color:var(--grau)}
+.abschnitt{font-family:'DM Serif Display',Georgia,serif; font-weight:400; color:var(--blau); font-size:26px; margin:28px 0 14px}
+
+/* Matrix: Personen × Stationen — scrollt in sich, nie die Seite */
+.tabelle-rahmen{overflow-x:auto; padding:6px 6px 12px}
+.matrix{border-collapse:collapse; width:100%; font-size:15px; min-width:640px}
+.matrix th{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--grau); font-weight:600;
+  text-align:left; padding:10px 8px; border-bottom:1.5px solid var(--linie)}
+.matrix th a{color:var(--blau); text-decoration:none; font-size:15px; display:inline-block; min-width:28px}
+.matrix th a:hover{text-decoration:underline}
+.matrix th small{font-size:10px; margin-left:1px; color:var(--grau)}
+.matrix td{padding:8px; border-bottom:1px solid var(--linie)}
+.matrix tr:last-child td{border-bottom:none}
+.matrix td a{color:var(--ink); font-weight:500; text-decoration:none}
+.matrix td a:hover{color:var(--petrol); text-decoration:underline}
+.mitte{text-align:center!important}
+.zelle{width:52px; font-weight:600}
+.zelle small{display:block; font-weight:400; font-size:11px; color:var(--grau)}
+.zelle.ok{color:var(--ok); background:var(--ok-bg)}
+.zelle.hier{color:var(--petrol); font-size:18px}
+.zelle.arbeit{color:var(--petrol); background:rgba(0,103,120,.05)}
+.zelle.arbeit.hier{font-size:15px}
+.zuletzt{display:block; font-size:12px; color:var(--grau); white-space:nowrap}
+.abstand-unten{margin-bottom:12px}
+details.person-station.arbeit{border-style:dashed; border-color:var(--petrol)}
+.legende{margin-top:12px; padding:0 8px}
+
+/* Auswertung je Aufgabe */
+.quote{margin-bottom:10px}
+.balken-zeile{display:grid; grid-template-columns:minmax(0,1fr) minmax(80px,200px) 78px; gap:12px; align-items:center;
+  padding:7px 0; border-bottom:1px dashed var(--linie)}
+.balken-zeile:last-child{border-bottom:none}
+.b-text{font-size:15px}
+.b-spur{height:12px; background:var(--linie); border-radius:6px; overflow:hidden}
+.b-spur i{display:block; height:100%; background:var(--petrol); border-radius:6px}
+.balken-zeile.loesung .b-spur i{background:var(--gruen)}
+.balken-zeile.loesung .b-text{color:var(--ok)}
+.b-zahl{font-variant-numeric:tabular-nums; text-align:right; font-size:15px}
+.b-zahl small{color:var(--grau)}
+.fehlgriff{margin:-2px 0 6px; font-size:13px}
+.abstand{margin-top:18px}
+.antworten{list-style:none; margin:0; padding:0; display:grid; gap:8px}
+.antworten li{background:var(--feld); border:1px solid var(--linie); border-radius:var(--r-sm); padding:10px 14px;
+  white-space:pre-wrap; font-size:16px}
+.antworten .wahl{display:inline-block; font-size:12px; font-weight:600; color:var(--blau); border:1.2px solid var(--blau);
+  border-radius:99px; padding:1px 8px; margin-right:4px; white-space:nowrap}
+
+details.karte summary{cursor:pointer; font-weight:600; color:var(--blau); list-style-position:inside}
+details.karte[open] summary{margin-bottom:14px}
+details.material .karte{margin-bottom:10px}
+.karte.offen{background:var(--feld); padding:12px 18px}
+
+/* QR-Dialog für den Beamer */
+.qr-dialog{max-width:520px; text-align:center}
+.qr-dialog h2{font-size:34px}
+.qr-feld{display:flex; justify-content:center; margin:18px 0 12px; min-height:120px}
+.qr-feld img,.qr-feld canvas{max-width:100%; height:auto}
+.qr-url{font-size:15px; word-break:break-all; color:var(--ink-2)}
+.qr-dialog .knoepfe{justify-content:center}
+
+@media (max-width:640px){
+  .balken-zeile{grid-template-columns:1fr 70px}
+  .b-spur{grid-column:1 / -1; order:3}
+}

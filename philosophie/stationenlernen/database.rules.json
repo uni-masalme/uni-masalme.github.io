@@ -1,0 +1,52 @@
+{
+  "rules": {
+    "teilnehmer": {
+      ".read": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      ".write": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['name', 'zuletzt'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 40" },
+        "aktuelleStation": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "zuletzt": { ".validate": "newData.val() === now" },
+        "$sonst": { ".validate": false }
+      }
+    },
+
+    "abgaben": {
+      ".read": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      ".write": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$station": {
+          ".write": "auth != null && auth.uid === $uid && !data.exists()",
+          ".validate": "$station.length <= 40 && newData.hasChildren(['name', 'punkte', 'maxPunkte', 'abgegebenAm'])",
+          "name": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "antworten": { ".validate": "newData.hasChildren()" },
+          "punkte": { ".validate": "newData.isNumber()" },
+          "maxPunkte": { ".validate": "newData.isNumber()" },
+          "abgegebenAm": { ".validate": "newData.val() === now" },
+          "$sonst": { ".validate": false }
+        }
+      }
+    },
+
+    "entwuerfe": {
+      ".read": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      ".write": "auth != null && (auth.uid === 'iflKi9TFTCgEThzK6SLn58iSvGN2' || auth.uid === 'Quu3VfhaXjWcf7O28I2JLL1AHbB2')",
+      "$uid": {
+        "$station": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "$station.length <= 40 && newData.hasChildren(['beantwortet', 'von', 'aktualisiert'])",
+          "antworten": { ".validate": "newData.hasChildren()" },
+          "beantwortet": { ".validate": "newData.isNumber()" },
+          "von": { ".validate": "newData.isNumber()" },
+          "aktualisiert": { ".validate": "newData.val() === now" },
+          "$sonst": { ".validate": false }
+        }
+      }
+    }
+  }
+}

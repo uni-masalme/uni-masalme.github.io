@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// Firestore-Regeln für das Stationenlernen.
+// In der Firebase-Konsole unter Firestore → Regeln vollständig einfügen.
+// Die UIDs in istLehrkraft() sind die Lehrkraft-Konten (E-Mail/Passwort und Google, siehe README).
+// Genutzt wird diese Datei nur ohne databaseURL in js/config.js.
+//
+// Schülerinnen und Schüler sind anonym angemeldet. Sie dürfen nur ihren eigenen
+// Eintrag anlegen und lesen und jede Station genau einmal abgeben. Fremde
+// Antworten sieht nur die Lehrkraft.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function angemeldet() {
+      return request.auth != null;
+    }
+
+    function istLehrkraft() {
+      return angemeldet() && request.auth.uid in ['iflKi9TFTCgEThzK6SLn58iSvGN2', 'Quu3VfhaXjWcf7O28I2JLL1AHbB2'];
+    }
+
+    function text(feld, max) {
+      return feld is string && feld.size() <= max;
+    }
+
+    function eigeneId(id) {
+      return angemeldet() && id.matches(request.auth.uid + '_.+');
+    }
+
+    match /teilnehmer/{uid} {
+      allow read: if istLehrkraft() || (angemeldet() && request.auth.uid == uid);
+
+      allow create, update: if angemeldet() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'aktuelleStation', 'zuletzt'])
+        && text(request.resource.data.name, 40) && request.resource.data.name.size() >= 2
+        && (request.resource.data.aktuelleStation == null || text(request.resource.data.aktuelleStation, 40))
+        && request.resource.data.zuletzt == request.time;
+
+      allow delete: if istLehrkraft();
+    }
+
+    match /abgaben/{abgabeId} {
+      // get auf die eigene Abgabe über die Id, list nur mit Filter auf die eigene uid
+      allow get: if istLehrkraft() || eigeneId(abgabeId);
+      allow list: if istLehrkraft()
+        || (angemeldet() && resource.data.uid == request.auth.uid);
+
+      // Jede Station genau einmal; danach unveränderlich
+      allow create: if angemeldet()
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'stationId', 'antworten', 'punkte', 'maxPunkte', 'abgegebenAm'])
+        && request.resource.data.uid == request.auth.uid
+        && abgabeId == request.auth.uid + '_' + request.resource.data.stationId
+        && text(request.resource.data.name, 40)
+        && text(request.resource.data.stationId, 40)
+        && request.resource.data.antworten is map
+        && request.resource.data.punkte is int
+        && request.resource.data.maxPunkte is int
+        && request.resource.data.abgegebenAm == request.time;
+
+      allow update: if false;
+      allow delete: if istLehrkraft();
+    }
+
+    // Zwischenstand einer Station vor der Abgabe — die Lehrkraft liest live mit.
+    match /entwuerfe/{entwurfId} {
+      allow get: if istLehrkraft() || eigeneId(entwurfId);
+      allow list: if istLehrkraft();
+
+      allow create, update: if angemeldet()
+        && request.resource.data.keys().hasOnly(['uid', 'stationId', 'antworten', 'beantwortet', 'von', 'aktualisiert'])
+        && request.resource.data.uid == request.auth.uid
+        && entwurfId == request.auth.uid + '_' + request.resource.data.stationId
+        && text(request.resource.data.stationId, 40)
+        && request.resource.data.antworten is map
+        && request.resource.data.beantwortet is int
+        && request.resource.data.von is int
+        && request.resource.data.aktualisiert == request.time;
+
+      allow delete: if istLehrkraft() || eigeneId(entwurfId);
+    }
+  }
+}

@@ -1,0 +1,72 @@
+/* ==================================================
+   start.css — Übersichtsseiten (Startseite, Fachseiten)
+   Gleiches Design wie das Stationenlernen und die
+   Arbeitsblätter: RUB-Palette, DM Serif Display für
+   Titel, DM Sans für alles andere.
+================================================== */
+
+@font-face{font-family:'DM Sans';font-weight:400;font-display:swap;src:url('fonts/DMSans-Regular.ttf') format('truetype')}
+@font-face{font-family:'DM Sans';font-weight:500;font-display:swap;src:url('fonts/DMSans-Medium.ttf') format('truetype')}
+@font-face{font-family:'DM Sans';font-weight:600;font-display:swap;src:url('fonts/DMSans-SemiBold.ttf') format('truetype')}
+@font-face{font-family:'DM Serif Display';font-weight:400;font-display:swap;src:url('fonts/DMSerifDisplay-Regular.ttf') format('truetype')}
+
+:root{
+  --blau:#003560; --petrol:#006778; --gruen:#8dae10;
+  --ink:#16212d; --ink-2:#44505c; --grau:#6b7785;
+  --linie:#e3e8ee; --grund:#f3f5f8; --karte:#ffffff;
+  color-scheme:light;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--grund); color:var(--ink);
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:17px; line-height:1.5; overflow-x:hidden}
+
+.seite{max-width:960px; margin:0 auto; padding:64px 16px 72px}
+
+.zurueck{display:inline-block; margin-bottom:28px; color:var(--petrol); font-weight:600; font-size:15px; text-decoration:none}
+.zurueck:hover{text-decoration:underline}
+
+.kopf{padding-bottom:28px; margin-bottom:36px; border-bottom:1.5px solid var(--linie)}
+.eyebrow{font-size:12px; text-transform:uppercase; letter-spacing:.14em; color:var(--grau); margin:0 0 10px}
+.titel{font-family:'DM Serif Display',Georgia,serif; font-weight:400; color:var(--blau);
+  font-size:clamp(36px,7vw,52px); line-height:1.05; margin:0}
+.titel span{color:var(--petrol)}
+.untertitel{color:var(--ink-2); margin:14px 0 0; max-width:36em}
+
+.fach{margin-bottom:44px}
+.fach-kopf{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:16px}
+.fach-kopf h2{font-size:13px; text-transform:uppercase; letter-spacing:.14em; color:var(--grau); font-weight:600; margin:0}
+.fach-kopf a{color:var(--petrol); font-weight:600; font-size:14px; text-decoration:none}
+.fach-kopf a:hover{text-decoration:underline}
+
+.raster{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px}
+
+/* Karte wie die Stationskarten, Auftragskante oben wie auf dem Arbeitsblatt */
+.karte{position:relative; display:flex; flex-direction:column; gap:8px; overflow:hidden;
+  background:var(--karte); border:1px solid var(--linie); border-radius:14px;
+  padding:26px 24px 22px; text-decoration:none; color:inherit; min-height:210px;
+  transition:border-color .15s, transform .15s, box-shadow .15s}
+.karte::before{content:''; position:absolute; left:0; right:0; top:0; height:4px;
+  background:linear-gradient(to right,var(--petrol),var(--gruen))}
+.karte:hover{border-color:var(--petrol); transform:translateY(-3px); box-shadow:0 12px 28px rgba(0,103,120,.08)}
+.karte:focus-visible{outline:2px solid var(--petrol); outline-offset:3px}
+.marke{align-self:flex-start; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+  padding:3px 10px; border-radius:99px; border:1.3px solid var(--blau); color:var(--blau); margin-bottom:6px}
+.marke.voll{background:var(--blau); color:#fff}
+.karte h3{font-family:'DM Serif Display',Georgia,serif; font-weight:400; font-size:26px; line-height:1.15;
+  color:var(--blau); margin:0}
+.karte p{margin:0; font-size:15px; color:var(--ink-2)}
+.pfeil{margin-top:auto; padding-top:14px; display:flex; align-items:center; gap:8px; font-size:13px;
+  font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--petrol); transition:gap .15s}
+.pfeil::after{content:'→'; font-size:16px; letter-spacing:0}
+.karte:hover .pfeil{gap:14px}
+
+.fuss{margin-top:24px; padding-top:22px; border-top:1.5px solid var(--linie); font-size:13px; color:var(--grau)}
+
+@media (max-width:560px){
+  .seite{padding:40px 16px 56px}
+  .raster{grid-template-columns:1fr}
+  .karte{min-height:0}
+}
