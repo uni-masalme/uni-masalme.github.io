@@ -16,11 +16,9 @@ export function esc(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-/* Aufgaben einer Station, die Zusatzaufgabe am Ende markiert */
+/* Alle Aufgaben einer Station in der Reihenfolge aus stationen.js */
 export function alleAufgaben(station) {
-  const liste = station.aufgaben.map(a => ({ ...a, zusatz: false }));
-  if (station.zusatz) liste.push({ ...station.zusatz, zusatz: true, optional: true });
-  return liste;
+  return station.aufgaben.map(a => ({ ...a }));
 }
 
 /* ── Reihenfolge der Zuordnen-Elemente: gemischt, aber stabil ── */
@@ -115,7 +113,7 @@ export function antwortText(aufgabe, wert) {
   switch (aufgabe.typ) {
     case 'freitext':   return wert;
     case 'mc':         return [].concat(wert).map(i => aufgabe.optionen[i]).join(' | ');
-    case 'abstimmung': return [aufgabe.optionen[wert.wahl], wert.begruendung].filter(Boolean).join(' – ');
+    case 'abstimmung': return [aufgabe.optionen[wert.wahl], wert.begruendung].filter(Boolean).join('. ');
     case 'zuordnen': {
       const ist = zuordnung(wert, aufgabe.elemente.length);
       return aufgabe.elemente.map((e, i) => `${e.text} → ${aufgabe.kategorien[ist[i]] ?? '?'}`).join(' | ');
@@ -149,7 +147,7 @@ export function renderMaterial(station) {
 export function renderAufgaben(station, antworten, optionen = {}) {
   let nr = 0;
   return alleAufgaben(station).map(a => {
-    const nummer = a.zusatz ? '★' : String(++nr);
+    const nummer = a.optional && station.layout === 'quiz' ? '' : String(++nr);
     return renderAufgabe(station, a, nummer, antworten[a.id], optionen);
   }).join('');
 }
@@ -191,12 +189,12 @@ function renderRueckmeldung(a, bew) {
   const erkl = a.erklaerung ? ` ${esc(a.erklaerung)}` : '';
   return bew.richtig
     ? `<div class="feedback-box correct-fb"><span class="fb-icon">✓</span><span><b>Richtig!</b>${erkl}</span></div>`
-    : `<div class="feedback-box wrong-fb"><span class="fb-icon">✗</span><span>Nicht ganz. Richtige Antwort: <strong>${esc(loesung.join(' / '))}</strong>${erkl ? '<br>' + erkl : ''}</span></div>`;
+    : `<div class="feedback-box wrong-fb"><span class="fb-icon">✗</span><span>Nicht ganz. Richtig ist <strong>${esc(loesung.join(' / '))}</strong>${erkl ? '<br>' + erkl : ''}</span></div>`;
 }
 
 function renderAufgabe(station, a, nummer, wert, { gesperrt = false, ergebnis = null }) {
   const bew = ergebnis && ergebnis.je[a.id];
-  const quiz = station.layout === 'quiz' && !a.zusatz;
+  const quiz = station.layout === 'quiz';
 
   /* Abschlussquiz: Fragenblöcke wie im Heterogenität-Test */
   if (quiz && a.typ === 'mc') {
@@ -204,6 +202,14 @@ function renderAufgabe(station, a, nummer, wert, { gesperrt = false, ergebnis = 
       ${a.thema ? `<div class="question-theme">${esc(a.thema)}</div>` : ''}
       <div class="question-text">${nummer}. ${esc(a.auftrag)}</div>
       ${renderOptionen(a, wert, gesperrt, bew)}${renderRueckmeldung(a, bew)}</section>`;
+  }
+  if (quiz && a.typ === 'freitext' && !a.optional) {
+    return `<section class="aufgabe question-block" id="aufgabe-${a.id}" data-aufgabe="${a.id}">
+      ${a.thema ? `<div class="question-theme">${esc(a.thema)}</div>` : ''}
+      <div class="question-text">${nummer}. ${esc(a.auftrag)}</div>
+      ${gesperrt ? textBlock(wert)
+        : `<textarea class="schreib" data-a="${a.id}" data-k="text" rows="${Math.max(2, a.zeilen || 3)}"
+             maxlength="${MAX_ZEICHEN}" aria-label="${esc(a.auftrag)}">${esc(wert || '')}</textarea>`}</section>`;
   }
   if (quiz && a.typ === 'freitext' && a.optional) {
     return `<section class="aufgabe offene-frage-wrap" id="aufgabe-${a.id}" data-aufgabe="${a.id}">
@@ -216,9 +222,7 @@ function renderAufgabe(station, a, nummer, wert, { gesperrt = false, ergebnis = 
   const marke = bew && a.typ === 'zuordnen'
     ? `<span class="urteil ${bew.richtig ? 'ok' : 'nein'}">${bew.richtig ? '✓ alles richtig' : `${bew.punkte} von ${a.elemente.length} richtig`}</span>`
     : '';
-  const kopf = a.zusatz
-    ? `<div class="label">Zusatzaufgabe · freiwillig</div><p class="a-text">${esc(a.auftrag)}</p>`
-    : `<div class="a-kopf"><span class="nr">${nummer}</span><p class="a-text">${esc(a.auftrag)}${a.mehrfach ? ' <span class="hinweis">(mehrere Antworten möglich)</span>' : ''}</p>${marke}</div>`;
+  const kopf = `<div class="a-kopf"><span class="nr">${nummer}</span><p class="a-text">${esc(a.auftrag)}${a.mehrfach ? ' <span class="hinweis">(mehrere Antworten möglich)</span>' : ''}</p>${marke}</div>`;
 
   let koerper = '';
 
@@ -250,7 +254,7 @@ function renderAufgabe(station, a, nummer, wert, { gesperrt = false, ergebnis = 
       const ist = gewaehlt[i];
       const ok = bew ? bew.elemente[i] : null;
       const rueck = bew
-        ? `<div class="z-rueck ${ok ? 'ok' : 'nein'}">${ok ? '✓ richtig' : `✗ richtig wäre: <b>${esc(a.kategorien[e.richtig])}</b>`}</div>`
+        ? `<div class="z-rueck ${ok ? 'ok' : 'nein'}">${ok ? '✓ richtig' : `✗ richtig wäre <b>${esc(a.kategorien[e.richtig])}</b>`}</div>`
         : '';
       return `<div class="z-element${bew ? (ok ? ' ok' : ' nein') : ''}">
         <p class="z-text">${esc(e.text)}</p>
@@ -264,7 +268,7 @@ function renderAufgabe(station, a, nummer, wert, { gesperrt = false, ergebnis = 
     }).join('') + '</div>';
   }
 
-  return `<section class="aufgabe${a.zusatz ? ' karte zusatz' : ''}" id="aufgabe-${a.id}" data-aufgabe="${a.id}">${kopf}${koerper}</section>`;
+  return `<section class="aufgabe" id="aufgabe-${a.id}" data-aufgabe="${a.id}">${kopf}${koerper}</section>`;
 }
 
 function textBlock(text) {

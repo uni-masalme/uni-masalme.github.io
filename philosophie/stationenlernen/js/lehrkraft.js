@@ -35,7 +35,7 @@ async function start() {
   }
   if (speicher.modus === 'demo') {
     banner.hidden = false;
-    banner.textContent = 'Demo-Modus: Angezeigt wird nur, was in diesem Browser auf der Schülerseite eingegeben wurde. Ohne ?demo in der Adresse siehst du die echten Ergebnisse.';
+    banner.textContent = 'Demo-Modus. Angezeigt wird nur, was in diesem Browser auf der Schülerseite eingegeben wurde. Ohne ?demo in der Adresse siehst du die echten Ergebnisse.';
   }
   window.addEventListener('hashchange', zeichne);
   speicher.lehrkraftStatus(user => {
@@ -58,7 +58,7 @@ async function start() {
     }, err => {
       console.error(err);
       app.innerHTML = err.code === 'permission-denied'
-        ? `<div class="banner fehler">Dieses Konto darf die Ergebnisse nicht lesen – seine UID steht nicht in den Datenbank-Regeln.</div>
+        ? `<div class="banner fehler">Dieses Konto darf die Ergebnisse nicht lesen. Seine UID steht nicht in den Datenbank-Regeln.</div>
            <div class="karte"><div class="label">Angemeldet als</div>
              <p>${esc(user.email || '(ohne E-Mail)')}</p>
              <div class="label abstand-oben">UID dieses Kontos</div>
@@ -136,6 +136,10 @@ function personen() {
   stand.entwuerfe.forEach(e => { if (map.has(e.uid)) map.get(e.uid).entwuerfe[e.stationId] = e; });
   const liste = [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
   liste.forEach((p, i) => { p.anzeige = anonym ? `Person ${i + 1}` : p.name; });
+  // Wer sich ab- und mit anderem Namen wieder anmeldet, behält den Gerätecode
+  liste.forEach(p => {
+    p.selbesGeraet = p.geraet ? liste.filter(q => q !== p && q.geraet === p.geraet) : [];
+  });
   return liste;
 }
 
@@ -158,10 +162,11 @@ function vorMinuten(ms) {
 /* ── Rahmen ── */
 function zeichne() {
   if (!stand) return;
-  const m = location.hash.match(/^#\/(station|person)\/([\w-]+)/);
+  const m = location.hash.match(/^#\/(station|person|besprechung)(?:\/([\w-]+))?/);
   const liste = personen();
   let inhalt;
-  if (m && m[1] === 'station' && STATIONEN.some(s => s.id === m[2])) inhalt = stationsAnsicht(STATIONEN.find(s => s.id === m[2]), liste);
+  if (m && m[1] === 'besprechung') inhalt = besprechungsAnsicht(m[2], liste);
+  else if (m && m[1] === 'station' && STATIONEN.some(s => s.id === m[2])) inhalt = stationsAnsicht(STATIONEN.find(s => s.id === m[2]), liste);
   else if (m && m[1] === 'person' && liste.some(p => p.uid === m[2])) inhalt = personenAnsicht(liste.find(p => p.uid === m[2]));
   else inhalt = uebersicht(liste);
 
@@ -173,6 +178,7 @@ function zeichne() {
       <span><a class="link" href="./${location.search}">‹ Schülerseite</a> · <span class="live">● live</span></span>
       <span class="werkzeuge">
         <label class="schalter"><input type="checkbox" id="anonym" ${anonym ? 'checked' : ''}> Namen ausblenden</label>
+        <a class="knopf hell klein" href="#/besprechung">Besprechung</a>
         <button class="knopf hell klein" id="qr">Link &amp; QR-Code</button>
         <button class="knopf hell klein" id="csv">CSV</button>
         <button class="knopf gefahr klein" id="loeschen">Alles löschen</button>
@@ -188,6 +194,7 @@ function zeichne() {
   document.getElementById('csv').onclick = exportiereCsv;
   document.getElementById('loeschen').onclick = allesLoeschen;
   document.getElementById('abmelden')?.addEventListener('click', () => speicher.lehrkraftAbmelden());
+  app.querySelector('[data-loesche]')?.addEventListener('click', e => eintragLoeschen(e.currentTarget.dataset.loesche));
 }
 
 /* ── Übersicht ── */
@@ -197,7 +204,7 @@ function uebersicht(liste) {
   const quizAbgaben = stand.abgaben.filter(a => a.stationId === 'quiz' && a.maxPunkte);
   const quizSchnitt = quizAbgaben.length
     ? (quizAbgaben.reduce((n, a) => n + a.punkte, 0) / quizAbgaben.length).toFixed(1).replace('.', ',')
-    : '–';
+    : 'offen';
 
   const kopfZellen = STATIONEN.map((s, i) =>
     `<th class="mitte"><a href="#/station/${s.id}" title="${esc(s.titel)}">${i + 1}${s.art === 'pflicht' ? '<small>P</small>' : ''}</a></th>`).join('');
@@ -207,15 +214,17 @@ function uebersicht(liste) {
       const a = p.abgaben[s.id];
       const e = p.entwuerfe[s.id];
       const hier = p.aktuelleStation === s.id;
-      if (a) return `<td class="mitte zelle ok" title="${esc(s.titel)}: abgegeben">✓${a.maxPunkte ? `<small>${a.punkte}/${a.maxPunkte}</small>` : ''}</td>`;
-      if (e) return `<td class="mitte zelle arbeit${hier ? ' hier' : ''}" title="${esc(s.titel)}: in Arbeit, ${e.beantwortet} von ${e.von} Aufgaben">${hier ? '●' : '✎'}<small>${e.beantwortet}/${e.von}</small></td>`;
-      if (hier) return `<td class="mitte zelle hier" title="${esc(s.titel)}: gerade geöffnet">●</td>`;
+      if (a) return `<td class="mitte zelle ok" title="${esc(s.titel)}, abgegeben">✓${a.maxPunkte ? `<small>${a.punkte}/${a.maxPunkte}</small>` : ''}</td>`;
+      if (e) return `<td class="mitte zelle arbeit${hier ? ' hier' : ''}" title="${esc(s.titel)}, in Arbeit, ${e.beantwortet} von ${e.von} Aufgaben">${hier ? '●' : '✎'}<small>${e.beantwortet}/${e.von}</small></td>`;
+      if (hier) return `<td class="mitte zelle hier" title="${esc(s.titel)}, gerade geöffnet">●</td>`;
       return '<td class="mitte zelle"></td>';
     }).join('');
     const lz = laufzettelStand(p);
     const nr = stationNr(p.aktuelleStation);
     return `<tr>
-      <td><a href="#/person/${p.uid}">${esc(p.anzeige)}</a><small class="zuletzt">${nr ? `bei Station ${nr}` : 'Übersicht'} · ${vorMinuten(p.zuletzt)}</small></td>
+      <td><a href="#/person/${p.uid}">${esc(p.anzeige)}</a>
+        <small class="zuletzt">${p.geraet ? `Gerät ${esc(p.geraet)} · ` : ''}${nr ? `bei Station ${nr}` : 'Übersicht'} · ${vorMinuten(p.zuletzt)}</small>
+        ${p.selbesGeraet.length && !anonym ? `<small class="warnung">⚠ Auf diesem Gerät auch angemeldet als ${p.selbesGeraet.map(q => esc(q.name)).join(', ')}</small>` : ''}</td>
       ${zellen}
       <td class="mitte">${Object.keys(p.abgaben).length}/${STATIONEN.length}</td>
       <td class="mitte">${lz.fertig ? '<b>✓ erfüllt</b>' : `<small>P ${lz.pflichtFertig}/${lz.pflicht} · W ${Math.min(lz.wahl, REGELN.mindestWahl)}/${REGELN.mindestWahl}</small>`}</td></tr>`;
@@ -237,7 +246,7 @@ function uebersicht(liste) {
         <thead><tr><th>Name</th>${kopfZellen}<th class="mitte">Abgegeben</th><th class="mitte">Laufzettel</th></tr></thead>
         <tbody>${zeilen}</tbody>
       </table>
-      <p class="hinweis legende">✓ abgegeben (mit Punkten, wo es welche gibt) · ✎ angefangen, noch nicht abgegeben (bearbeitete Aufgaben) · ● gerade geöffnet · P Pflichtstation. Name anklicken: alle Eingaben dieser Person. Stationsnummer anklicken: Auswertung der Station.</p>
+      <p class="hinweis legende">✓ abgegeben (mit Punkten, wo es welche gibt) · ✎ angefangen, noch nicht abgegeben (bearbeitete Aufgaben) · ● gerade geöffnet · P Pflichtstation. Ein Klick auf einen Namen zeigt alle Eingaben dieser Person, ein Klick auf eine Stationsnummer die Auswertung der Station.</p>
     </div>` : `<div class="karte"><p>Noch niemand angemeldet. Über <b>Link &amp; QR-Code</b> kommt die Klasse auf die Seite.</p></div>`}
     <h2 class="abschnitt">Stationen</h2>
     <div class="raster">${STATIONEN.map((s, i) => {
@@ -257,18 +266,19 @@ function balken(text, anzahl, gesamt, markiert = false) {
     <div class="b-zahl">${anzahl} <small>(${pct} %)</small></div></div>`;
 }
 
-function stationsAnsicht(station, liste) {
+function stationsAnsicht(station, liste, { besprechung = false } = {}) {
   const nameVon = new Map(liste.map(p => [p.uid, p.anzeige]));
   const abg = stand.abgaben.filter(a => a.stationId === station.id)
     .sort((a, b) => (nameVon.get(a.uid) || '').localeCompare(nameVon.get(b.uid) || '', 'de'));
   const n = abg.length;
   const nr = stationNr(station.id);
   const vor = STATIONEN[nr - 2], nach = STATIONEN[nr];
-  const wer = a => anonym ? '' : `<b>${esc(nameVon.get(a.uid) || a.name)}:</b> `;
+  // In der Besprechung nie Namen zeigen
+  const wer = a => anonym || besprechung ? '' : `<b>${esc(nameVon.get(a.uid) || a.name)}</b> · `;
 
   let aufgabenNr = 0;
   const bloecke = alleAufgaben(station).map(a => {
-    const nummer = a.zusatz ? '★' : ++aufgabenNr;
+    const nummer = ++aufgabenNr;
     const werte = abg.map(x => ({ x, w: (x.antworten || {})[a.id] }));
     let koerper = '';
 
@@ -303,9 +313,9 @@ function stationsAnsicht(station, liste) {
         gewaehlt.filter(k => k !== e.richtig).forEach(k => { falsch[k] = (falsch[k] || 0) + 1; });
         const haeufig = Object.entries(falsch).sort((x, y) => y[1] - x[1])[0];
         return balken(`${e.text} → ${a.kategorien[e.richtig]}`, ok, gewaehlt.length) +
-          (haeufig ? `<p class="hinweis fehlgriff">häufigster Fehler: ${esc(a.kategorien[haeufig[0]])} (${haeufig[1]}×)</p>` : '');
+          (haeufig ? `<p class="hinweis fehlgriff">Häufigster Fehler ist ${esc(a.kategorien[haeufig[0]])} (${haeufig[1]}×)</p>` : '');
       }).join('');
-      if (n) koerper = '<p class="hinweis">Balken = Anteil richtig zugeordnet</p>' + koerper;
+      if (n) koerper = '<p class="hinweis">Die Balken zeigen, wie viele richtig zugeordnet haben.</p>' + koerper;
     }
 
     if (a.typ === 'freitext') {
@@ -315,18 +325,27 @@ function stationsAnsicht(station, liste) {
         : '<p class="hinweis">Noch keine Antworten.</p>';
     }
 
-    return `<section class="aufgabe${a.zusatz ? ' karte zusatz' : ''}">
-      ${a.zusatz ? '<div class="label">Zusatzaufgabe</div>' : ''}
-      <div class="a-kopf">${a.zusatz ? '' : `<span class="nr">${nummer}</span>`}<p class="a-text">${esc(a.auftrag)}</p></div>
+    return `<section class="aufgabe">
+      <div class="a-kopf"><span class="nr">${nummer}</span><p class="a-text">${esc(a.auftrag)}</p></div>
       ${koerper}</section>`;
   }).join('');
 
   const hier = liste.filter(p => p.aktuelleStation === station.id && !p.abgaben[station.id]).length;
   const inArbeit = liste.filter(p => p.entwuerfe[station.id]);
   const arbeitsListe = inArbeit.length ? `<div class="karte">
-      <div class="label">In Arbeit – noch nicht abgegeben</div>
+      <div class="label">In Arbeit, noch nicht abgegeben</div>
       <p>${inArbeit.map(p => `<a class="link" href="#/person/${p.uid}">${esc(p.anzeige)}</a> <span class="hinweis">(${p.entwuerfe[station.id].beantwortet}/${p.entwuerfe[station.id].von})</span>`).join(' · ')}</p>
     </div>` : '';
+  if (besprechung) {
+    return `
+    <header class="kopf station-kopf">
+      <p class="eyebrow">Station ${nr} · ${esc(station.bezug)}</p>
+      <h1 class="titel">${esc(station.titel)}</h1>
+      <div class="meta"><span>${n} Abgabe${n === 1 ? '' : 'n'}</span></div>
+    </header>
+    ${renderMaterial(station)}
+    ${bloecke}`;
+  }
   return `
     <div class="kopfzeile"><a class="link" href="#/">‹ Übersicht</a>
       <span>${vor ? `<a class="link" href="#/station/${vor.id}">‹ Station ${nr - 1}</a>` : ''}
@@ -342,6 +361,34 @@ function stationsAnsicht(station, liste) {
     ${bloecke}`;
 }
 
+/* ── Besprechung der Pflichtstationen am Beamer ── */
+function besprechungsAnsicht(stationId, liste) {
+  const pflicht = STATIONEN.filter(s => s.art === 'pflicht');
+  const station = pflicht.find(s => s.id === stationId) || pflicht[0];
+  const reiter = pflicht.map(s => `<a class="reiter${s === station ? ' an' : ''}" href="#/besprechung/${s.id}">${stationNr(s.id)} · ${esc(s.titel)}</a>`).join('');
+  return `
+    <div class="kopfzeile"><a class="link" href="#/">‹ Übersicht</a><span class="hinweis">Besprechung · ohne Namen</span></div>
+    <nav class="reiterleiste">${reiter}</nav>
+    <div class="besprechung">${stationsAnsicht(station, liste, { besprechung: true })}</div>`;
+}
+
+async function eintragLoeschen(uid) {
+  const p = personen().find(x => x.uid === uid);
+  if (!p) return;
+  const ok = await frage(`Eintrag „${p.name}“ löschen?`,
+    'Name, Abgaben und Zwischenstände dieser Anmeldung werden gelöscht. Das iPad springt zurück zur Namenseingabe. Der Gerätecode bleibt erhalten, damit du siehst, wenn auf demselben Gerät ein neuer Name eingegeben wird.',
+    'Löschen', 'Abbrechen', true);
+  if (!ok) return;
+  try {
+    await speicher.loescheTeilnehmer(uid);
+    toast('Eintrag gelöscht.');
+    location.hash = '#/';
+  } catch (err) {
+    console.error(err);
+    toast('Löschen hat nicht geklappt.', 'fehler');
+  }
+}
+
 /* ── Eine Person ── */
 function personenAnsicht(p) {
   const teile = STATIONEN.map((s, i) => {
@@ -351,7 +398,7 @@ function personenAnsicht(p) {
       return `<details class="karte person-station arbeit" data-key="${p.uid}-${s.id}">
         <summary><b>Station ${i + 1}: ${esc(s.titel)}</b>
           <span class="hinweis"> · ✎ in Arbeit, ${e.beantwortet} von ${e.von} Aufgaben bearbeitet · zuletzt ${vorMinuten(e.aktualisiert)}${p.aktuelleStation === s.id ? ' · ● gerade geöffnet' : ''}</span></summary>
-        <p class="hinweis abstand-unten">Zwischenstand – noch nicht abgegeben, deshalb ohne Lösungen.</p>
+        <p class="hinweis abstand-unten">Zwischenstand, noch nicht abgegeben. Deshalb ohne Lösungen.</p>
         <div class="gesperrt">${renderAufgaben(s, e.antworten || {}, { gesperrt: true })}</div>
       </details>`;
     }
@@ -371,8 +418,12 @@ function personenAnsicht(p) {
     <div class="kopfzeile"><a class="link" href="#/">‹ Übersicht</a><span></span></div>
     <header class="kopf"><p class="eyebrow">Ergebnisse</p><h1 class="titel">${esc(p.anzeige)}</h1>
       <p class="untertitel">${Object.keys(p.abgaben).length} von ${STATIONEN.length} Stationen abgegeben${Object.keys(p.entwuerfe).length ? ` · ${Object.keys(p.entwuerfe).length} in Arbeit` : ''}
-        · ${laufzettel(p) ? 'Laufzettel erfüllt ✓' : (() => { const lz = laufzettelStand(p); return `Laufzettel: Pflicht ${lz.pflichtFertig}/${lz.pflicht}, Wahl ${Math.min(lz.wahl, REGELN.mindestWahl)}/${REGELN.mindestWahl}`; })()}
-        <br><span class="hinweis">${stationNr(p.aktuelleStation) ? `Gerade bei Station ${stationNr(p.aktuelleStation)}` : 'Gerade in der Übersicht'} · zuletzt aktiv ${vorMinuten(p.zuletzt)}</span></p></header>
+        · ${laufzettel(p) ? 'Laufzettel erfüllt ✓' : (() => { const lz = laufzettelStand(p); return `Laufzettel offen (Pflicht ${lz.pflichtFertig}/${lz.pflicht}, Wahl ${Math.min(lz.wahl, REGELN.mindestWahl)}/${REGELN.mindestWahl})`; })()}
+        <br><span class="hinweis">${p.geraet ? `Gerät ${esc(p.geraet)} · ` : ''}${stationNr(p.aktuelleStation) ? `Gerade bei Station ${stationNr(p.aktuelleStation)}` : 'Gerade in der Übersicht'} · zuletzt aktiv ${vorMinuten(p.zuletzt)}</span></p></header>
+    ${p.selbesGeraet.length ? `<div class="karte warnkarte"><div class="label">Weitere Namen auf Gerät ${esc(p.geraet)}</div>
+      <p>${p.selbesGeraet.map(q => `<a class="link" href="#/person/${q.uid}">${esc(anonym ? q.anzeige : q.name)}</a> <span class="hinweis">(zuletzt ${vorMinuten(q.zuletzt)})</span>`).join(' · ')}</p></div>` : ''}
+    <div class="karte loeschkarte"><p class="hinweis">Unpassender Name? Der Gerätecode steht klein auf dem iPad neben dem Namen.</p>
+      <button class="knopf gefahr klein" data-loesche="${p.uid}">Diesen Eintrag löschen</button></div>
     ${teile}`;
 }
 
@@ -404,7 +455,7 @@ async function zeigeQr() {
   hg.querySelector('#zu').onclick = zu;
   hg.querySelector('#kopieren').onclick = async () => {
     try { await navigator.clipboard.writeText(url); toast('Link kopiert.'); }
-    catch { toast('Kopieren nicht möglich – Link bitte markieren.', 'fehler'); }
+    catch { toast('Kopieren ist nicht möglich. Bitte den Link markieren.', 'fehler'); }
   };
   try {
     await ladeQrBibliothek();
@@ -413,7 +464,7 @@ async function zeigeQr() {
       correctLevel: window.QRCode.CorrectLevel.M,
     });
   } catch {
-    hg.querySelector('#qrFeld').innerHTML = '<p class="hinweis">QR-Code konnte nicht geladen werden – der Link darunter funktioniert trotzdem.</p>';
+    hg.querySelector('#qrFeld').innerHTML = '<p class="hinweis">Der QR-Code konnte nicht geladen werden. Der Link darunter funktioniert trotzdem.</p>';
   }
 }
 
@@ -421,7 +472,8 @@ async function zeigeQr() {
 function exportiereCsv() {
   const liste = personen();
   const name = new Map(liste.map(p => [p.uid, p.name]));
-  const zeilen = [['Name', 'Station', 'Status', 'Aufgabe', 'Auftrag', 'Antwort', 'Bewertung', 'Zeit']];
+  const zeilen = [['Name', 'Gerät', 'Station', 'Status', 'Aufgabe', 'Auftrag', 'Antwort', 'Bewertung', 'Zeit']];
+  const geraetVon = new Map(liste.map(p => [p.uid, p.geraet || '']));
   STATIONEN.forEach((s, si) => {
     const eintraege = [
       ...stand.abgaben.filter(a => a.stationId === s.id).map(a => ({ ...a, status: 'abgegeben', zeit: a.abgegebenAm })),
@@ -434,9 +486,10 @@ function exportiereCsv() {
         const bew = erg.je[auf.id];
         zeilen.push([
           name.get(a.uid) || a.name || '',
+          geraetVon.get(a.uid) || '',
           `${si + 1} ${s.titel}`,
           a.status,
-          auf.zusatz ? 'Zusatz' : String(++nr),
+          String(++nr),
           auf.auftrag,
           antwortText(auf, (a.antworten || {})[auf.id]),
           bew ? (auf.typ === 'zuordnen' ? `${bew.punkte}/${auf.elemente.length}` : bew.richtig ? 'richtig' : 'falsch') : '',

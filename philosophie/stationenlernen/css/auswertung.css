@@ -71,3 +71,21 @@ details.material .karte{margin-bottom:10px}
   .balken-zeile{grid-template-columns:1fr 70px}
   .b-spur{grid-column:1 / -1; order:3}
 }
+
+/* Gerätecode und weitere Namen auf demselben Gerät */
+.warnung{display:block; font-size:12px; font-weight:600; color:var(--nein); margin-top:2px}
+.warnkarte{border-color:var(--nein); background:var(--nein-bg)}
+.warnkarte .label{color:var(--nein)}
+.loeschkarte{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+
+/* Besprechung am Beamer: größere Schrift, keine Namen */
+.reiterleiste{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px}
+.reiter{padding:8px 16px; border-radius:99px; border:1.4px solid var(--rahmen); background:var(--karte);
+  color:var(--blau); font-weight:600; font-size:15px; text-decoration:none}
+.reiter:hover{border-color:var(--petrol)}
+.reiter.an{background:var(--blau); border-color:var(--blau); color:#fff}
+.besprechung .titel{font-size:clamp(36px,5vw,52px)}
+.besprechung .a-text{font-size:22px}
+.besprechung .b-text, .besprechung .b-zahl{font-size:18px}
+.besprechung .antworten li{font-size:19px}
+.besprechung .karte p{font-size:19px}

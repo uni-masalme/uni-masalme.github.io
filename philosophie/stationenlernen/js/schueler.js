@@ -5,7 +5,7 @@
    Entwürfe bleiben im Browser, bis abgegeben ist.
 ================================================== */
 
-import { oeffneSpeicher } from './speicher.js';
+import { oeffneSpeicher, geraetCode } from './speicher.js';
 import { KURS, REGELN, STATIONEN } from './stationen.js';
 import { renderMaterial, renderAufgaben, bindeEingaben, bewerte, fehlende, istBeantwortet, alleAufgaben, esc } from './aufgaben.js';
 import { toast, frage } from './ui.js';
@@ -18,6 +18,7 @@ let ich = null;          // { uid, name }
 let abgaben = {};        // stationId → Abgabe
 let ansicht = '';        // 'uebersicht' | 'station'
 let stopAbgaben = null;
+let stopIch = null;          // beobachtet, ob die Lehrkraft den eigenen Eintrag gelöscht hat
 let zwischenTimer = null;    // verzögertes Senden des Zwischenstands
 let zwischenSenden = null;   // ausstehender Sendevorgang, falls die Seite verlassen wird
 
@@ -58,7 +59,7 @@ async function start() {
   }
   if (speicher.modus === 'demo') {
     banner.hidden = false;
-    banner.textContent = 'Demo-Modus: Antworten bleiben nur in diesem Browser und gehen nicht an die Lehrkraft.';
+    banner.textContent = 'Demo-Modus. Die Antworten bleiben nur in diesem Browser und gehen nicht an die Lehrkraft.';
   }
   try {
     ich = await speicher.aktuellerTeilnehmer();
@@ -72,6 +73,12 @@ async function start() {
 
 function starteSitzung() {
   stopAbgaben?.();
+  stopIch?.();
+  let warDa = false;
+  stopIch = speicher.beobachteMich(da => {
+    if (da) { warDa = true; return; }
+    if (warDa) zurueckgesetzt();
+  });
   ansicht = '';
   app.innerHTML = '<p class="laden">Lade deine Stationen …</p>';
   // Erst nach dem ersten Stand der Abgaben zeichnen, sonst wirkt eine
@@ -83,7 +90,7 @@ function starteSitzung() {
     else if (ansicht === 'uebersicht') zeigeUebersicht();
   }, err => {
     console.error(err);
-    toast('Verbindung unterbrochen – lade die Seite neu, falls nichts mehr geht.', 'fehler');
+    toast('Die Verbindung ist unterbrochen. Lade die Seite neu, falls nichts mehr geht.', 'fehler');
     if (!geladen) { geladen = true; route(); }
   });
 }
@@ -112,7 +119,8 @@ function zeigeAnmeldung() {
         <p class="hinweis">Nur der Vorname. Gibt es ihn zweimal in der Klasse, hänge den ersten Buchstaben deines Nachnamens an.</p>
         <button class="knopf" type="submit">Los geht’s</button>
       </form>
-      <div class="admin-zeile"><a class="knopf hell klein" href="admin.html${location.search}">Admin</a></div>
+      <div class="admin-zeile"><span class="geraet">Gerät ${esc(geraetCode())}</span>
+        <a class="knopf hell klein" href="admin.html${location.search}">Admin</a></div>
     </div>`;
   const form = document.getElementById('anmeldeForm');
   const feld = document.getElementById('name');
@@ -133,10 +141,23 @@ function zeigeAnmeldung() {
       const einrichtung = ['auth/configuration-not-found', 'auth/operation-not-allowed', 'auth/admin-restricted-operation'];
       toast(einrichtung.includes(err.code)
         ? 'Die Anmeldung ist auf dem Server noch nicht freigeschaltet. Sag bitte der Lehrkraft Bescheid.'
-        : 'Anmelden hat nicht geklappt. Prüfe das WLAN und versuche es noch einmal.', 'fehler');
+        : err.code === 'permission-denied'
+          ? 'Der Server hat die Anmeldung abgelehnt. Sag bitte der Lehrkraft Bescheid.'
+          : 'Anmelden hat nicht geklappt. Prüfe das WLAN und versuche es noch einmal.', 'fehler');
       knopf.disabled = false; knopf.textContent = 'Los geht’s';
     }
   });
+}
+
+/* Die Lehrkraft hat den Eintrag gelöscht, zum Beispiel wegen eines unpassenden Namens */
+function zurueckgesetzt() {
+  verwirfAusstehendes();
+  stopAbgaben?.(); stopAbgaben = null;
+  stopIch?.(); stopIch = null;
+  ich = null; abgaben = {};
+  history.replaceState(null, '', location.pathname + location.search);
+  zeigeAnmeldung();
+  toast('Die Lehrkraft hat deinen Eintrag gelöscht. Melde dich bitte mit deinem Vornamen neu an.', 'fehler');
 }
 
 async function abmelden() {
@@ -146,6 +167,7 @@ async function abmelden() {
   if (!ok) return;
   sendeAusstehendes();
   stopAbgaben?.(); stopAbgaben = null;
+  stopIch?.(); stopIch = null;
   await speicher.abmelden();
   ich = null; abgaben = {};
   history.replaceState(null, '', location.pathname + location.search);
@@ -179,12 +201,12 @@ function zeigeUebersicht() {
           <span class="marke ${s.art}">${s.art === 'pflicht' ? 'Pflicht' : 'Wahl'}</span></div>
         <h3>${esc(s.titel)}</h3>
         <p class="kurz">${esc(s.kurz)}</p>
-        <div class="unten"><span>${esc(s.bezug)} · ca. ${s.minuten} Min.</span>${status}</div>
+        <div class="unten"><span>${esc(s.bezug)}</span>${status}</div>
       </a>`;
   }).join('');
 
   app.innerHTML = `
-    <div class="kopfzeile"><span>Angemeldet als <b>${esc(ich.name)}</b></span>
+    <div class="kopfzeile"><span>Angemeldet als <b>${esc(ich.name)}</b> <span class="geraet">· Gerät ${esc(geraetCode())}</span></span>
       <span class="werkzeuge"><button class="link" id="abmelden">Abmelden</button>
         <a class="knopf hell klein" href="admin.html${location.search}">Admin</a></span></div>
     <header class="kopf">
@@ -197,7 +219,8 @@ function zeigeUebersicht() {
         <div class="label">Laufzettel</div>
         <p>${lz.fertig
           ? '<b>✓ Geschafft.</b> Du kannst weitere Wahlstationen bearbeiten.'
-          : `Bearbeite <b>alle ${lz.pflicht} Pflichtstationen</b> und <b>mindestens ${REGELN.mindestWahl} Wahlstationen</b>. Die Reihenfolge wählst du selbst.`}</p>
+          : `Bearbeite <b>alle ${lz.pflicht} Pflichtstationen</b> und <b>mindestens ${REGELN.mindestWahl === 1 ? 'eine Wahlstation' : `${REGELN.mindestWahl} Wahlstationen`}</b>. Die Reihenfolge wählst du selbst.`}
+          Die Pflichtstationen besprechen wir am Ende der Stunde gemeinsam.</p>
         <div class="balken" role="progressbar" aria-valuemin="0" aria-valuemax="${lz.soll}" aria-valuenow="${lz.ist}">
           <i style="width:${Math.round(lz.ist / lz.soll * 100)}%"></i></div>
       </div>
@@ -216,8 +239,7 @@ function stationsKopf(station) {
     <header class="kopf station-kopf">
       <p class="eyebrow">Station ${nr} · ${esc(station.bezug)}</p>
       <h1 class="titel">${esc(station.titel)}</h1>
-      <div class="meta"><span class="marke ${station.art}">${station.art === 'pflicht' ? 'Pflicht' : 'Wahl'}</span>
-        <span>ca. ${station.minuten} Minuten</span></div>
+      <div class="meta"><span class="marke ${station.art}">${station.art === 'pflicht' ? 'Pflicht' : 'Wahl'}</span></div>
     </header>`;
 }
 
@@ -323,7 +345,7 @@ function zeigeErgebnis(station, abgabe, frisch = false) {
     <div class="karte ergebnis">
       ${ergebnis.max ? `<span class="punkte">${ergebnis.punkte}/${ergebnis.max}</span>` : ''}
       <div><b>${frisch ? '✓ Abgegeben.' : '✓ Diese Station hast du abgegeben.'}</b><br>
-        <span class="hinweis">${ergebnis.max ? 'Unten siehst du, was richtig war.' : 'Hier gibt es kein Richtig oder Falsch – deine Antworten liest die Lehrkraft.'}
+        <span class="hinweis">${ergebnis.max ? 'Unten siehst du, was richtig war.' : 'Hier gibt es kein Richtig oder Falsch. Deine Antworten liest die Lehrkraft.'}
         ${lz.fertig ? ' Dein Laufzettel ist erfüllt.' : ''}</span></div>
     </div>
     ${renderMaterial(station)}

@@ -41,7 +41,8 @@ p{margin:0}
 /* ── Kopf ─────────────────────────────────────── */
 .eyebrow{font-size:12px; text-transform:uppercase; letter-spacing:.14em; color:var(--grau); margin:0 0 6px}
 .titel{font-family:'DM Serif Display',Georgia,serif; font-weight:400; color:var(--blau);
-  font-size:clamp(30px,6vw,42px); line-height:1.08; margin:0}
+  font-size:clamp(30px,6vw,42px); line-height:1.08; margin:0;
+  -webkit-hyphens:auto; hyphens:auto; overflow-wrap:break-word}
 .untertitel{color:var(--ink-2); margin-top:10px; font-size:17px}
 .kopf{padding:8px 0 22px; margin-bottom:22px; border-bottom:1.5px solid var(--linie)}
 .kopfzeile{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
@@ -50,7 +51,8 @@ p{margin:0}
   text-decoration:none; font-size:15px}
 .link:hover{text-decoration:underline}
 .werkzeuge{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap}
-.admin-zeile{display:flex; justify-content:center; margin-top:48px}
+.admin-zeile{display:flex; justify-content:center; align-items:center; gap:16px; margin-top:48px}
+.geraet{font-size:13px; color:var(--grau); font-weight:400; white-space:nowrap}
 
 /* ── Karten und Bausteine ─────────────────────── */
 .karte{background:var(--karte); border:1px solid var(--linie); border-radius:var(--r);
@@ -115,7 +117,8 @@ code.uid{font-family:Consolas,Menlo,monospace; font-size:16px; background:var(--
 .station-karte:hover{border-color:var(--petrol); transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,103,120,.07)}
 .station-karte .oben{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
 .station-karte h3{font-family:'DM Serif Display',Georgia,serif; font-weight:400; font-size:23px;
-  line-height:1.15; color:var(--blau); margin:0}
+  line-height:1.15; color:var(--blau); margin:0;
+  -webkit-hyphens:auto; hyphens:auto; overflow-wrap:break-word}
 .station-karte .kurz{font-size:15px; color:var(--ink-2)}
 .station-karte .unten{margin-top:auto; padding-top:10px; display:flex; justify-content:space-between;
   align-items:center; gap:8px; font-size:13px; color:var(--grau)}
@@ -136,19 +139,15 @@ code.uid{font-family:Consolas,Menlo,monospace; font-size:16px; background:var(--
 .station-kopf .meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; font-size:14px; color:var(--grau)}
 .aufgabe{background:var(--karte); border:1px solid var(--linie); border-radius:var(--r);
   padding:18px 20px 20px; margin-bottom:16px; position:relative; overflow:hidden}
-.aufgabe:not(.zusatz)::before{content:''; position:absolute; left:0; top:0; bottom:0; width:6px;
+.aufgabe::before{content:''; position:absolute; left:0; top:0; bottom:0; width:6px;
   background:linear-gradient(to top,var(--gruen),var(--petrol))}
-.aufgabe:not(.zusatz){padding-left:26px}
+.aufgabe{padding-left:26px}
 .aufgabe.fehlt{border-color:var(--nein); box-shadow:0 0 0 2px var(--nein-bg)}
 .aufgabe.fehlt .a-kopf::after{content:'Bitte noch bearbeiten'; display:block; width:100%;
   font-size:13px; font-weight:600; color:var(--nein); padding-left:42px}
 .a-kopf{display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px}
 .a-kopf .nr{margin-top:1px}
 .a-text{flex:1 1 180px; min-width:0; font-weight:500; font-size:18px; line-height:1.45}
-.zusatz{border:1.6px dashed var(--petrol); background:var(--karte)}
-.zusatz .label{color:var(--petrol)}
-.zusatz .label::before{content:'★ '}
-.zusatz .a-text{margin-bottom:12px}
 
 .urteil{font-size:13px; font-weight:600; padding:3px 10px; border-radius:99px; border:1.4px solid; white-space:nowrap}
 .urteil.ok{color:var(--ok); border-color:var(--gruen); background:var(--ok-bg)}
@@ -271,7 +270,7 @@ button.chip:hover{border-color:var(--petrol); background:rgba(0,103,120,.04)}
   body{font-size:16px}
   .seite{padding:16px 16px 80px}
   .aufgabe, .karte{padding:16px}
-  .aufgabe:not(.zusatz){padding-left:22px}
+  .aufgabe{padding-left:22px}
   .a-text{font-size:17px}
   .abgabe .knopf{width:100%}
   .z-element{padding:10px 12px}

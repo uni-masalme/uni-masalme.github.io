@@ -1,45 +1,45 @@
 /* ==================================================
-   stationen.js — Inhalte des Stationenlernens
+   stationen.js · Inhalte des Stationenlernens
    Reihe „Entscheidungen“ (Kl. 9), Abschlussstunde
 
-   Hier stehen alle Texte. Code muss für inhaltliche
-   Änderungen nicht angefasst werden.
+   Hier stehen alle Texte. Für inhaltliche Änderungen
+   muss kein anderer Code angefasst werden.
 
    Aufgabentypen
-     freitext    { auftrag, zeilen }
-     mc          { auftrag, optionen[], richtig: Index | [Indizes], erklaerung?, thema? }
-                 ohne „richtig“ wird nicht bewertet; mehrfach:true erlaubt mehrere Kreuze;
+     freitext    { auftrag, zeilen, optional? }
+     mc          { auftrag, optionen[], richtig (Index oder [Indizes]), erklaerung?, thema? }
+                 ohne „richtig“ wird nicht bewertet, mehrfach:true erlaubt mehrere Kreuze,
                  thema erscheint im Quiz-Layout als Überzeile der Frage
      abstimmung  { auftrag, optionen[], begruendung? }   keine richtige Antwort
-     zuordnen    { auftrag, kategorien[], elemente[{ text, richtig: Index der Kategorie }] }
+     zuordnen    { auftrag, kategorien[], elemente[{ text, richtig (Index der Kategorie) }] }
 
    Ids einer Station oder Aufgabe nach dem ersten Einsatz
-   nicht mehr ändern — die Abgaben verweisen darauf.
+   nicht mehr ändern, weil die Abgaben darauf verweisen.
+
+   Texte für die Klasse ohne Gedankenstriche und ohne
+   Doppelpunkte, Überschriften funktional.
 ================================================== */
 
 export const KURS = {
   eyebrow: 'Philosophie · Klasse 9 · Entscheidungen',
   titel: 'Stationenlernen',
-  leitfrage: 'Wie treffen wir Entscheidungen – und wer entscheidet eigentlich?',
+  leitfrage: 'Wie treffen wir Entscheidungen?',
 };
 
-/* Laufzettel: alle Pflichtstationen und mindestens so viele Wahlstationen */
-export const REGELN = { mindestWahl: 2 };
+/* Laufzettel. Alle Pflichtstationen und mindestens so viele Wahlstationen.
+   Die letzten 20 Minuten der Stunde gehören der Besprechung der Pflichtstationen. */
+export const REGELN = { mindestWahl: 1 };
 
 export const STATIONEN = [
 
   /* ── 1 ─────────────────────────────────────────── */
   {
     id: 'brieffoeffner',
-    titel: 'Brieföffner, Fels, Mensch',
+    titel: 'Existenz und Wesen bei Sartre',
     bezug: 'Sartre',
     art: 'pflicht',
-    minuten: 12,
-    kurz: 'Was unterscheidet einen Menschen von einem Gegenstand?',
-    material: [
-      { typ: 'info', label: 'Zur Erinnerung',
-        text: 'Jean-Paul Sartre (1905–1980) behauptet: <b>„Die Existenz geht dem Wesen voraus.“</b> Ein Brieföffner wird nach einem Plan hergestellt. Bevor es ihn gibt, steht schon fest, wozu er da ist. Beim Menschen ist es umgekehrt: Er ist zuerst da und macht danach selbst etwas aus sich.' },
-    ],
+    kurz: 'Sartres Behauptung, dass die Existenz dem Wesen vorausgeht',
+    material: [],
     aufgaben: [
       { id: 'a', typ: 'zuordnen',
         auftrag: 'Ordne jede Aussage dem zu, worauf sie passt.',
@@ -62,24 +62,35 @@ export const STATIONEN = [
         ],
         richtig: 2,
         erklaerung: 'Für Sartre gibt es keinen Bauplan des Menschen. Was ein Mensch ist, ergibt sich erst aus dem, was er aus sich macht.' },
+      { id: 'd', typ: 'mc',
+        auftrag: 'Kreuze an, warum es nach Sartre keine menschliche Natur gibt.',
+        optionen: [
+          'Weil alle Menschen verschieden aussehen.',
+          'Weil es keinen Gott gibt, der sie sich ausgedacht hat.',
+          'Weil der Mensch ein Werkzeug ist.',
+          'Weil die Wissenschaft das bewiesen hat.',
+        ],
+        richtig: 1,
+        erklaerung: 'Sartre vergleicht Gott mit einem Handwerker. Ohne Gott gibt es keinen Plan, nach dem der Mensch gemacht wurde.' },
       { id: 'c', typ: 'freitext', zeilen: 4,
         auftrag: 'Erkläre in eigenen Worten, worin sich ein Mensch von einem Brieföffner unterscheidet.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Wer gibt einem Fels seine Bedeutung, und wer gibt dir deine? Beantworte beide Fragen.' },
+      { id: 'e', typ: 'freitext', zeilen: 4,
+        auftrag: 'Nimm Stellung zu Sartres Behauptung. Begründe deine Meinung mit einem Beispiel aus deinem Leben.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Wer gibt dem Fels seine Bedeutung – und wer gibt dir deine? Beantworte beide Fragen in zwei Sätzen.' },
   },
 
   /* ── 2 ─────────────────────────────────────────── */
   {
     id: 'sechs',
-    titel: 'Dieselbe Sechs',
+    titel: 'Bedeutungen bei Sartre',
     bezug: 'Sartre',
     art: 'wahl',
-    minuten: 10,
-    kurz: 'Woher kommt die Bedeutung einer Note?',
+    kurz: 'Woher die Bedeutung einer Sache kommt',
     material: [
       { typ: 'fall', label: 'Fall',
-        text: 'In der Mathearbeit gibt es mehrere Sechsen. Es ist jedes Mal dieselbe Note – und trotzdem bedeutet sie nicht für alle dasselbe.' },
+        text: 'In einer Mathearbeit bekommen mehrere Schülerinnen und Schüler eine Sechs. Die Note ist für alle gleich. Was sie bedeutet, ist es nicht.' },
     ],
     aufgaben: [
       { id: 'a', typ: 'freitext', zeilen: 5,
@@ -88,33 +99,38 @@ export const STATIONEN = [
         auftrag: 'Kreuze an, woher die Bedeutung der Sechs kommt.',
         optionen: [
           'Aus dem, was ein Mensch vorhat und was ihm wichtig ist.',
-          'Aus der Note selbst – eine Sechs ist immer schlecht.',
+          'Aus der Note selbst, denn eine Sechs ist immer schlecht.',
           'Nur aus der Meinung der Lehrkraft.',
         ],
         richtig: 0,
         erklaerung: 'Die Note ist für alle gleich. Was sie bedeutet, hängt davon ab, was jemand mit seinem Leben vorhat.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Ein Fels liegt neben einem Wanderweg. Nenne drei Menschen, für die er jeweils etwas anderes ist.' },
       { id: 'c', typ: 'freitext', zeilen: 3,
         auftrag: 'Nenne etwas aus deinem Alltag, das für dich etwas anderes bedeutet als für deine Freunde. Erkläre, woran das liegt.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Prüfe, ob das auch für eine Eins gilt. Begründe deine Antwort.' },
+      { id: 'f', typ: 'abstimmung',
+        auftrag: 'Stimmt diese Aussage? „Eine schlechte Note sagt etwas darüber, wer ich bin.“',
+        optionen: ['Ja', 'Nein', 'Teilweise'],
+        begruendung: 'Begründe mit Sartre.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Gilt das auch für eine Eins? Begründe deine Antwort.' },
   },
 
   /* ── 3 ─────────────────────────────────────────── */
   {
     id: 'ausreden',
-    titel: 'Ausreden auf dem Prüfstand',
+    titel: 'Freiheit und Verantwortung bei Sartre',
     bezug: 'Sartre',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Kann man sich vor einer Entscheidung drücken?',
+    kurz: 'Zur Freiheit verurteilt sein und Ausreden',
     material: [
       { typ: 'merke', label: 'Sartre',
-        text: 'Wir sind <b>zur Freiheit verurteilt</b>. Wir können nicht nicht entscheiden: Auch wer nichts tut, hat sich entschieden. Und für das, was wir wählen, tragen wir die Verantwortung.' },
+        text: 'Wir sind <b>zur Freiheit verurteilt</b>. Wir können nicht nicht entscheiden, denn auch wer nichts tut, hat sich entschieden. Für das, was wir wählen, tragen wir die Verantwortung.' },
     ],
     aufgaben: [
       { id: 'a', typ: 'zuordnen',
-        auftrag: 'Ordne jede Ausrede zu: Worauf schiebt die Person die Verantwortung?',
+        auftrag: 'Ordne jede Ausrede zu. Worauf schiebt die Person die Verantwortung?',
         kategorien: ['auf andere', 'auf die Umstände', 'auf den eigenen Charakter'],
         elemente: [
           { text: '„Das machen doch alle.“', richtig: 0 },
@@ -133,32 +149,34 @@ export const STATIONEN = [
           '„So bin ich halt.“',
         ],
         richtig: 3,
-        erklaerung: 'Wer „So bin ich halt“ sagt, tut so, als hätte er ein festes Wesen – wie ein Brieföffner. Genau das bestreitet Sartre.' },
+        erklaerung: 'Wer „So bin ich halt“ sagt, tut so, als hätte er ein festes Wesen wie ein Brieföffner. Genau das bestreitet Sartre.' },
       { id: 'c', typ: 'freitext', zeilen: 4,
         auftrag: 'Wähle eine Ausrede, die du selbst schon benutzt hast. Schreibe auf, was Sartre dir darauf antworten würde.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: '„Ich habe mich gar nicht entschieden, ich habe einfach nichts gemacht.“ Erkläre, warum Sartre diesen Satz nicht gelten lässt.' },
+      { id: 'e', typ: 'abstimmung',
+        auftrag: 'Ist man für alles verantwortlich, was man entscheidet?',
+        optionen: ['Ja', 'Nein', 'Teilweise'],
+        begruendung: 'Begründe mit einem Beispiel.' },
+      { id: 'f', typ: 'freitext', zeilen: 4,
+        auftrag: 'Beschreibe eine Situation, in der jemand wirklich keine Wahl hat. Prüfe, ob Sartre dir zustimmen würde.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: '„Ich habe mich gar nicht entschieden, ich habe einfach nichts gemacht.“ Erkläre, warum Sartre das nicht gelten lässt.' },
   },
 
   /* ── 4 ─────────────────────────────────────────── */
   {
     id: 'strategien',
-    titel: 'Wie entscheidest du?',
+    titel: 'Entscheidungs\u00ADstrategien',   // weiches Trennzeichen, sonst trennt der Browser mitten in strategien
     bezug: 'Gute Entscheidungen',
     art: 'wahl',
-    minuten: 10,
-    kurz: 'Strategien, mit denen Menschen zu einer Entscheidung kommen',
-    material: [
-      { typ: 'info', label: 'Zur Erinnerung',
-        text: 'In der Stunde „Gute Entscheidungen“ habt ihr gesammelt, wie Menschen zu ihren Entscheidungen kommen: aus dem Bauch, mit Pro und Contra, indem sie andere fragen, nach Werten und Regeln, aus Gewohnheit oder durch Zufall.' },
-    ],
+    kurz: 'Wie Menschen zu einer Entscheidung kommen',
+    material: [],
     aufgaben: [
       { id: 'a', typ: 'zuordnen',
         auftrag: 'Ordne jede Situation der Strategie zu, die die Person benutzt.',
         kategorien: ['Bauchgefühl', 'Pro und Contra', 'Andere fragen', 'Werte und Regeln', 'Gewohnheit', 'Zufall'],
         elemente: [
-          { text: 'Mia wirft eine Münze: Pizza oder Nudeln?', richtig: 5 },
+          { text: 'Mia wirft eine Münze, um zwischen Pizza und Nudeln zu wählen.', richtig: 5 },
           { text: 'Jonas schreibt auf, was für und was gegen den Nebenjob spricht.', richtig: 1 },
           { text: 'Elif fragt ihre große Schwester, welches Praktikum sie nehmen soll.', richtig: 2 },
           { text: 'Noah gibt die gefundene Geldbörse ab, weil man das so macht.', richtig: 3 },
@@ -169,21 +187,24 @@ export const STATIONEN = [
         auftrag: 'Welche Strategie benutzt du am häufigsten?',
         optionen: ['Bauchgefühl', 'Pro und Contra', 'Andere fragen', 'Werte und Regeln', 'Gewohnheit', 'Zufall'],
         begruendung: 'Nenne ein Beispiel aus deinem Alltag.' },
+      { id: 'e', typ: 'freitext', zeilen: 4,
+        auftrag: 'Wähle eine Strategie. Nenne einen Vorteil und einen Nachteil dieser Strategie.' },
       { id: 'c', typ: 'freitext', zeilen: 3,
         auftrag: 'Nenne eine Strategie, die bei großen Entscheidungen schlecht funktioniert. Begründe deine Wahl.' },
+      { id: 'f', typ: 'freitext', zeilen: 3,
+        auftrag: 'Beschreibe eine Entscheidung, bei der du zwei Strategien zusammen benutzt hast.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Ist „Ich entscheide einfach gar nicht“ auch eine Strategie? Begründe mit Sartre.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Ist „Ich entscheide einfach gar nicht“ auch eine Strategie? Begründe mit Sartre.' },
   },
 
   /* ── 5 ─────────────────────────────────────────── */
   {
     id: 'kriterien',
-    titel: 'Kriterien abwägen',
+    titel: 'Kriterien für Entscheidungen',
     bezug: 'Gute Entscheidungen',
     art: 'pflicht',
-    minuten: 15,
-    kurz: 'Welcher Vorteil wiegt schwerer?',
+    kurz: 'Dauer, Wichtigkeit, Wahrscheinlichkeit und Betroffene an einem Fall',
     material: [
       { typ: 'merke', label: 'Kriterien',
         liste: [
@@ -221,22 +242,32 @@ export const STATIONEN = [
         ],
         richtig: 1,
         erklaerung: 'Die Kriterien sagen, worauf man achten kann. Wie schwer sie wiegen, entscheidet jede und jeder selbst.' },
+      { id: 'f', typ: 'mc',
+        auftrag: 'Angenommen, Lina kennt alle Vor- und Nachteile genau. Kreuze an, was daraus folgt.',
+        optionen: [
+          'Die Entscheidung ergibt sich von selbst.',
+          'Lina braucht keine Kriterien mehr.',
+          'Lina muss trotzdem selbst entscheiden.',
+        ],
+        richtig: 2,
+        erklaerung: 'Kriterien helfen beim Ordnen. Die Wahl nehmen sie Lina nicht ab.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Nenne das Kriterium, das du allgemein für das wichtigste hältst. Begründe deine Wahl.' },
+      { id: 'z', typ: 'freitext', zeilen: 4,
+        auftrag: 'Denke dir einen eigenen Fall aus, in dem sich die Kriterien widersprechen. Beschreibe ihn kurz.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 4,
-      auftrag: 'Denke dir einen eigenen Fall aus, in dem sich die Kriterien widersprechen. Beschreibe ihn kurz.' },
   },
 
   /* ── 6 ─────────────────────────────────────────── */
   {
     id: 'klaviertaste',
-    titel: 'Klaviertaste oder Mensch?',
+    titel: 'Wille und Vorteil bei Dostojewski',
     bezug: 'Dostojewski',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Handeln wir immer nach unserem Vorteil?',
+    kurz: 'Ob Menschen immer nach ihrem Vorteil handeln',
     material: [
       { typ: 'info', label: 'Zum Text',
-        text: 'Fjodor M. Dostojewski (1821–1881) schrieb 1864 die <i>Aufzeichnungen aus dem Kellerloch</i>. Damals glaubten viele: Mit Vernunft und Wissenschaft kann man ausrechnen, was für jeden Menschen das Beste ist. Dann würde jeder automatisch danach handeln – wie eine Klaviertaste, die immer gleich klingt, wenn man sie drückt. Der Erzähler des Buches widerspricht.' },
+        text: 'Fjodor M. Dostojewski (1821 bis 1881) schrieb 1864 die <i>Aufzeichnungen aus dem Kellerloch</i>. Damals glaubten viele, man könne mit Vernunft und Wissenschaft ausrechnen, was für jeden Menschen das Beste ist. Dann würde jeder automatisch danach handeln, so wie eine Klaviertaste immer gleich klingt, wenn man sie drückt. Der Erzähler des Buches widerspricht.' },
       { typ: 'zitat',
         text: 'Was der Mensch braucht, ist einzig und allein ein selbständiges Wollen, was auch immer diese Selbständigkeit kosten und wohin auch immer sie führen mag.',
         quelle: 'Dostojewski, Aufzeichnungen aus dem Kellerloch (1864)' },
@@ -251,35 +282,36 @@ export const STATIONEN = [
           'Anderen Menschen zu helfen.',
         ],
         richtig: 2,
-        erklaerung: 'Der Erzähler will selbst entscheiden – notfalls sogar gegen seinen eigenen Vorteil.' },
+        erklaerung: 'Der Erzähler will selbst entscheiden, notfalls sogar gegen seinen eigenen Vorteil.' },
       { id: 'b', typ: 'mc',
         auftrag: 'Kreuze an, warum der Erzähler keine Klaviertaste sein will.',
         optionen: [
-          'Eine Taste reagiert immer gleich, wenn man sie drückt – sie hat keinen eigenen Willen.',
+          'Eine Taste reagiert immer gleich, wenn man sie drückt. Sie hat keinen eigenen Willen.',
           'Eine Taste wird von vielen verschiedenen Menschen benutzt.',
           'Eine Taste macht nur einen einzigen Ton.',
         ],
         richtig: 0,
         erklaerung: 'Wäre alles ausgerechnet, würden wir nur noch reagieren. Einen eigenen Willen hätten wir dann nicht mehr.' },
       { id: 'c', typ: 'abstimmung',
-        auftrag: 'Angenommen, du weißt genau, was das Beste für dich ist: Handelst du dann auch danach?',
+        auftrag: 'Angenommen, du weißt genau, was das Beste für dich ist. Handelst du dann auch danach?',
         optionen: ['Immer', 'Meistens', 'Eher selten'],
         begruendung: 'Begründe mit einem Beispiel.' },
+      { id: 'e', typ: 'freitext', zeilen: 4,
+        auftrag: 'Nenne ein Beispiel, in dem Menschen bewusst gegen ihren eigenen Vorteil handeln. Erkläre, warum sie das tun.' },
       { id: 'd', typ: 'freitext', zeilen: 4,
         auftrag: 'Eine Kuh im Stall wird gefüttert und ist ruhig und satt. Beurteile, ob das für dich ein gutes Leben wäre. Beziehe dich auf den Erzähler.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Der Erzähler findet sogar „zweimal zwei ist fünf“ manchmal reizvoll. Erkläre, warum jemand das wollen könnte.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Der Erzähler findet sogar „zweimal zwei ist fünf“ manchmal reizvoll. Erkläre, warum jemand das wollen könnte.' },
   },
 
   /* ── 7 ─────────────────────────────────────────── */
   {
     id: 'dilemma',
-    titel: 'Ein schwieriger Fall',
+    titel: 'Entscheiden im Dilemma',
     bezug: 'Gute Entscheidungen',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Austausch oder Freundschaft – wie würdest du entscheiden?',
+    kurz: 'Ein Fall, in dem zwei wichtige Dinge gegeneinander stehen',
     material: [
       { typ: 'fall', label: 'Fall',
         text: 'Deniz (15) darf in den Sommerferien drei Wochen an einem Schüleraustausch nach Kanada teilnehmen. Davon träumt er seit Jahren, und den Austausch gibt es nur in diesem Jahr. Genau in dieser Zeit zieht seine beste Freundin in eine andere Stadt. Sie hat ihn gebeten, beim Umzug zu helfen und die letzten Tage mit ihr zu verbringen.' },
@@ -294,103 +326,106 @@ export const STATIONEN = [
       { id: 'c', typ: 'freitext', zeilen: 4,
         auftrag: 'Begründe deine Entscheidung. Nenne auch, was dagegen spricht.' },
       { id: 'd', typ: 'freitext', zeilen: 3,
-        auftrag: 'Erkläre: Wofür trägt Deniz die Verantwortung – ganz egal, wie er sich entscheidet?' },
+        auftrag: 'Erkläre, wofür Deniz die Verantwortung trägt, ganz egal, wie er sich entscheidet.' },
+      { id: 'e', typ: 'abstimmung',
+        auftrag: 'Würdest du anders entscheiden, wenn statt der Freundin dein Bruder oder deine Schwester wegzieht?',
+        optionen: ['Ja', 'Nein'],
+        begruendung: 'Begründe deine Antwort.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Beschreibe einen Weg, der beides möglich macht. Was kostet dieser Weg?' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Beschreibe einen Weg, der beides möglich macht. Was kostet dieser Weg?' },
   },
 
   /* ── 8 ─────────────────────────────────────────── */
   {
     id: 'lebensentwurf',
-    titel: 'Mein Lebensentwurf',
+    titel: 'Lebensentwurf und Selbstbestimmung',
     bezug: 'Lebensentwurf und Sartre',
     art: 'wahl',
-    minuten: 10,
-    kurz: 'Hast du selbst entschieden, was dir wichtig ist?',
-    material: [
-      { typ: 'info', label: 'Zur Erinnerung',
-        text: 'Am Anfang der Reihe hast du aufgeschrieben, was unbedingt zu deinem Lebensentwurf gehört. Damals blieb eine Frage offen: Entscheidest du selbst, was dir wichtig ist – oder kannst du das gar nicht selbst entscheiden?' },
-    ],
+    kurz: 'Ob man selbst entscheidet, was einem wichtig ist',
+    material: [],
     aufgaben: [
       { id: 'a', typ: 'freitext', zeilen: 1,
-        auftrag: 'Nenne einen Punkt aus deinem Lebensentwurf.' },
+        auftrag: 'Nenne einen Punkt, der unbedingt zu deinem Lebensentwurf gehört.' },
       { id: 'b', typ: 'abstimmung',
         auftrag: 'Wie sehr hast du selbst entschieden, dass dir dieser Punkt wichtig ist?',
         optionen: ['Ganz allein', 'Größtenteils selbst', 'Teils, teils', 'Vor allem andere'] },
       { id: 'c', typ: 'freitext', zeilen: 3,
-        auftrag: 'Erkläre, wer oder was außer dir mitentschieden hat – zum Beispiel Familie, Freunde, Herkunft oder Vorbilder.' },
+        auftrag: 'Erkläre, wer oder was außer dir mitentschieden hat, zum Beispiel Familie, Freunde, Herkunft oder Vorbilder.' },
       { id: 'd', typ: 'freitext', zeilen: 4,
-        auftrag: 'Nimm Stellung: Kannst du frei entscheiden, was dir wichtig ist? Beziehe dich auf Sartre.' },
+        auftrag: 'Nimm Stellung. Kannst du frei entscheiden, was dir wichtig ist? Beziehe dich auf Sartre.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Nenne eine wichtige Entscheidung, die du bis zu deinem 30. Geburtstag wahrscheinlich treffen wirst. Begründe, warum du diese Entscheidung selbst treffen solltest.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Was müsste passieren, damit du diesen Punkt aus deinem Lebensentwurf streichst?' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Was müsste passieren, damit du diesen Punkt aus deinem Lebensentwurf streichst?' },
   },
 
   /* ── 9 · allgemein ─────────────────────────────── */
   {
     id: 'bereuen',
-    titel: 'Kann man eine Entscheidung bereuen?',
+    titel: 'Reue',
     bezug: 'allgemein',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Über Reue, Fehler und das, was man nicht getan hat',
+    kurz: 'Ob und warum man Entscheidungen bereut',
     material: [
       { typ: 'info', label: 'Hinweis',
-        text: 'Schreib nur auf, was du auch der Lehrkraft erzählen würdest. Du musst nichts sehr Persönliches preisgeben – ein ausgedachtes Beispiel ist auch in Ordnung.' },
+        text: 'Schreib nur auf, was du auch der Lehrkraft erzählen würdest. Ein ausgedachtes Beispiel ist auch in Ordnung.' },
     ],
     aufgaben: [
       { id: 'a', typ: 'abstimmung',
         auftrag: 'Hast du schon einmal eine Entscheidung bereut?',
         optionen: ['Ja, oft', 'Ja, manchmal', 'Kaum', 'Nie'] },
       { id: 'b', typ: 'freitext', zeilen: 4,
-        auftrag: 'Beschreibe eine Entscheidung, die man bereuen kann. Erkläre, was man im Nachhinein anders sehen würde.' },
+        auftrag: 'Beschreibe eine Entscheidung, die man bereuen kann. Erkläre, was man im Nachhinein anders sieht.' },
       { id: 'c', typ: 'abstimmung',
         auftrag: 'Was bereuen Menschen deiner Meinung nach eher?',
         optionen: ['Etwas getan zu haben', 'Etwas nicht getan zu haben'],
         begruendung: 'Begründe deine Meinung.' },
       { id: 'd', typ: 'freitext', zeilen: 4,
-        auftrag: 'Erkläre: Kann man eine Entscheidung bereuen, die damals trotzdem richtig war?' },
+        auftrag: 'Erkläre, ob man eine Entscheidung bereuen kann, die damals trotzdem richtig war.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Nenne zwei Dinge, die man tun kann, nachdem man eine Entscheidung bereut hat.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Bereut man einen Fehler noch, wenn man aus ihm gelernt hat? Begründe deine Meinung.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Sartre sagt: Für unsere Wahl tragen wir die Verantwortung. Bedeutet das, dass man nichts bereuen darf? Begründe.' },
   },
 
   /* ── 10 · allgemein ────────────────────────────── */
   {
     id: 'wie-und-warum',
-    titel: 'Wie entscheidest du – und warum?',
+    titel: 'Eigene Entscheidungen begründen',
     bezug: 'allgemein',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Dein eigener Weg zu einer Entscheidung',
+    kurz: 'Wie du selbst entscheidest und warum',
     material: [],
     aufgaben: [
       { id: 'a', typ: 'abstimmung',
         auftrag: 'Worauf hörst du bei wichtigen Entscheidungen am meisten?',
         optionen: ['Auf meinen Kopf', 'Auf mein Bauchgefühl', 'Auf meine Freunde', 'Auf meine Familie'],
-        begruendung: 'Begründe, warum das für dich so ist.' },
+        begruendung: 'Begründe, warum das bei dir so ist.' },
       { id: 'b', typ: 'freitext', zeilen: 5,
-        auftrag: 'Beschreibe Schritt für Schritt, wie du eine wichtige Entscheidung triffst: Was machst du zuerst, was danach?' },
+        auftrag: 'Beschreibe Schritt für Schritt, wie du eine wichtige Entscheidung triffst. Was machst du zuerst, was danach?' },
       { id: 'c', typ: 'freitext', zeilen: 4,
         auftrag: 'Erkläre, woran man eine gute Entscheidung erkennt. Begründe deine Antwort.' },
       { id: 'd', typ: 'abstimmung',
         auftrag: 'Fallen dir kleine oder große Entscheidungen schwerer?',
         optionen: ['Kleine', 'Große', 'Beide gleich'],
         begruendung: 'Begründe mit einem Beispiel.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Beschreibe, was du machst, wenn du dich gar nicht entscheiden kannst.' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Ist es manchmal besser, schnell zu entscheiden, statt lange nachzudenken? Begründe.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Ist es manchmal besser, eine Entscheidung schnell zu treffen, statt lange nachzudenken? Begründe.' },
   },
 
   /* ── 11 · allgemein ────────────────────────────── */
   {
     id: 'wer-entscheidet',
-    titel: 'Wer entscheidet mit?',
+    titel: 'Einflüsse auf Entscheidungen',
     bezug: 'allgemein',
     art: 'wahl',
-    minuten: 12,
-    kurz: 'Eltern, Freunde, Gewissen – wie frei sind deine Entscheidungen?',
+    kurz: 'Familie, Freunde und das eigene Gewissen',
     material: [],
     aufgaben: [
       { id: 'a', typ: 'abstimmung',
@@ -401,13 +436,15 @@ export const STATIONEN = [
         auftrag: 'Dein Gewissen sagt Nein, deine Freunde sagen Ja. Worauf hörst du?',
         optionen: ['Auf mein Gewissen', 'Auf meine Freunde', 'Kommt darauf an'],
         begruendung: 'Begründe mit einem Beispiel.' },
+      { id: 'e', typ: 'freitext', zeilen: 3,
+        auftrag: 'Beschreibe, woran du merkst, dass sich dein Gewissen meldet.' },
       { id: 'c', typ: 'freitext', zeilen: 4,
         auftrag: 'Nenne eine Entscheidung, die du gar nicht selbst treffen kannst. Erkläre, warum das so ist.' },
       { id: 'd', typ: 'freitext', zeilen: 4,
-        auftrag: 'Nimm Stellung: Ist eine Entscheidung noch deine eigene, wenn dir andere dabei geholfen haben?' },
+        auftrag: 'Nimm Stellung. Ist eine Entscheidung noch deine eigene, wenn dir andere dabei geholfen haben?' },
+      { id: 'z', typ: 'freitext', zeilen: 3,
+        auftrag: 'Gibt es Entscheidungen, die man niemandem abnehmen sollte, auch nicht aus Liebe? Nenne ein Beispiel.' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Gibt es Entscheidungen, die man niemandem abnehmen sollte – auch nicht aus Liebe? Nenne ein Beispiel.' },
   },
 
   /* ── 12 ────────────────────────────────────────── */
@@ -416,13 +453,12 @@ export const STATIONEN = [
     titel: 'Abschlussquiz',
     bezug: 'ganze Reihe',
     art: 'pflicht',
-    minuten: 10,
-    kurz: 'Acht Fragen zur ganzen Reihe',
+    kurz: 'Fragen zur ganzen Reihe',
     layout: 'quiz',          // Fragenblöcke und Fortschrittsleiste wie im Heterogenität-Test
     material: [],
     aufgaben: [
       { id: 'q1', typ: 'mc', thema: 'Sartre',
-        auftrag: 'Wer sagt: „Die Existenz geht dem Wesen voraus“?',
+        auftrag: 'Wer sagt „Die Existenz geht dem Wesen voraus“?',
         optionen: ['Fjodor M. Dostojewski', 'Jean-Paul Sartre', 'Martin Heidegger'],
         richtig: 1 },
       { id: 'q2', typ: 'mc', thema: 'Sartre',
@@ -430,7 +466,7 @@ export const STATIONEN = [
         optionen: [
           'Freiheit ist eine Strafe für schlechte Taten.',
           'Wir dürfen alles tun, was wir wollen.',
-          'Wir können nicht nicht entscheiden – auch Nichtstun ist eine Entscheidung.',
+          'Wir können nicht nicht entscheiden, denn auch Nichtstun ist eine Entscheidung.',
           'Nur wer frei ist, kann bestraft werden.',
         ],
         richtig: 2 },
@@ -442,15 +478,27 @@ export const STATIONEN = [
           'Der Brieföffner ist zur Freiheit verurteilt.',
         ],
         richtig: 0,
-        erklaerung: 'Beim Brieföffner ist es andersherum als beim Menschen: Zuerst steht fest, was er sein soll, dann wird er hergestellt.' },
+        erklaerung: 'Beim Brieföffner ist es andersherum als beim Menschen. Zuerst steht fest, was er sein soll, dann wird er hergestellt.' },
+      { id: 'q9', typ: 'mc', thema: 'Sartre',
+        auftrag: 'Wozu vergleicht Sartre den Menschen mit einem Brieföffner?',
+        optionen: [
+          'Er will zeigen, dass beide nützlich sind.',
+          'Er will den Unterschied zwischen Mensch und Gegenstand zeigen.',
+          'Er will zeigen, dass beide hergestellt werden.',
+        ],
+        richtig: 1 },
       { id: 'q4', typ: 'mc', thema: 'Gute Entscheidungen',
-        auftrag: 'Welches Kriterium fragt: „Betrifft die Folge nur mich oder auch andere?“',
+        auftrag: 'Welches Kriterium fragt, ob eine Folge nur mich oder auch andere betrifft?',
         optionen: ['Dauer', 'Wichtigkeit', 'Wahrscheinlichkeit', 'Betroffene'],
         richtig: 3 },
       { id: 'q5', typ: 'mc', thema: 'Gute Entscheidungen',
         auftrag: '„Wird meine Note durch das Lernen wirklich besser?“ Welches Kriterium steckt in dieser Frage?',
         optionen: ['Wahrscheinlichkeit', 'Dauer', 'Betroffene', 'Wichtigkeit'],
         richtig: 0 },
+      { id: 'q10', typ: 'mc', thema: 'Gute Entscheidungen',
+        auftrag: 'Jemand wirft eine Münze, um sich zu entscheiden. Welche Strategie ist das?',
+        optionen: ['Gewohnheit', 'Bauchgefühl', 'Zufall'],
+        richtig: 2 },
       { id: 'q6', typ: 'mc', thema: 'Dostojewski',
         auftrag: 'Wen meint Dostojewskis Erzähler mit einer „Klaviertaste“?',
         optionen: [
@@ -459,6 +507,10 @@ export const STATIONEN = [
           'Einen Menschen ohne eigenen Willen, der immer gleich auf das reagiert, was man ihm vorgibt.',
         ],
         richtig: 2 },
+      { id: 'q11', typ: 'mc', thema: 'Dostojewski',
+        auftrag: 'Was braucht der Mensch nach Dostojewskis Erzähler vor allem?',
+        optionen: ['Möglichst viel Sicherheit', 'Ein selbständiges Wollen', 'Eine Regel für jede Situation'],
+        richtig: 1 },
       { id: 'q7', typ: 'mc', thema: 'Gute Entscheidungen',
         auftrag: 'Warum können zwei Menschen mit denselben Kriterien verschieden entscheiden?',
         optionen: [
@@ -475,10 +527,10 @@ export const STATIONEN = [
           'Gute Entscheidungen trifft man immer aus dem Bauch heraus.',
         ],
         richtig: 1 },
+      { id: 'z', typ: 'freitext', zeilen: 3, thema: 'Gute Entscheidungen',
+        auftrag: 'Formuliere den Satz aus der letzten Frage in deinen eigenen Worten.' },
       { id: 'r', typ: 'freitext', zeilen: 3, optional: true,
         auftrag: 'Noch etwas unklar?' },
     ],
-    zusatz: { id: 'z', typ: 'freitext', zeilen: 3,
-      auftrag: 'Formuliere den Merksatz aus Frage 8 in deinen eigenen Worten.' },
   },
 ];

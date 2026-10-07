@@ -29,6 +29,23 @@ export async function oeffneSpeicher() {
   return firebaseConfig.databaseURL ? rtdbSpeicher() : firestoreSpeicher();
 }
 
+/* Fester Code für dieses Gerät (genauer: diesen Browser). Er bleibt beim Ab- und
+   Wiederanmelden gleich und steht klein auf der Schülerseite. So lässt sich in der
+   Auswertung nachvollziehen, auf welchem iPad ein Name eingegeben wurde. Den
+   Gerätenamen („iPad von …“) gibt Safari an Webseiten nicht heraus. */
+const GERAET_KEY = 'stl-geraet';
+let geraetCache = null;
+export function geraetCode() {
+  if (geraetCache) return geraetCache;
+  try { geraetCache = localStorage.getItem(GERAET_KEY); } catch { /* privater Modus */ }
+  if (!geraetCache) {
+    const zeichen = 'ACDEFGHJKLMNPRTUVWXY34679';   // ohne leicht verwechselbare Zeichen
+    geraetCache = Array.from({ length: 4 }, () => zeichen[Math.floor(Math.random() * zeichen.length)]).join('');
+    try { localStorage.setItem(GERAET_KEY, geraetCache); } catch { /* dann gilt er nur für diese Sitzung */ }
+  }
+  return geraetCache;
+}
+
 function mitZeitlimit(promise) {
   return Promise.race([
     promise,
@@ -85,7 +102,7 @@ async function rtdbSpeicher() {
       if (user && !user.isAnonymous) { await A.signOut(auth); user = null; }
       if (!user) user = (await mitZeitlimit(A.signInAnonymously(auth))).user;
       await mitZeitlimit(schreib(D.update(ref(`teilnehmer/${user.uid}`), {
-        name, aktuelleStation: null, zuletzt: jetzt(),
+        name, geraet: geraetCode(), aktuelleStation: null, zuletzt: jetzt(),
       })));
       ich = { uid: user.uid, name };
       return ich;
@@ -110,8 +127,13 @@ async function rtdbSpeicher() {
       if (!ich) return;
       // name mitschicken: legt den Eintrag neu an, falls die Lehrkraft gelöscht hat
       await schreib(D.update(ref(`teilnehmer/${ich.uid}`), {
-        name: ich.name, aktuelleStation: stationId, zuletzt: jetzt(),
+        name: ich.name, geraet: geraetCode(), aktuelleStation: stationId, zuletzt: jetzt(),
       }));
+    },
+
+    /* Meldet, ob der eigene Eintrag noch existiert (die Lehrkraft kann ihn löschen) */
+    beobachteMich(callback) {
+      return D.onValue(ref(`teilnehmer/${ich.uid}`), snap => callback(snap.exists()), () => {});
     },
 
     async speichereEntwurf(stationId, antworten, beantwortet, von) {
@@ -162,7 +184,7 @@ async function rtdbSpeicher() {
       const stops = [
         D.onValue(ref('teilnehmer'), snap => {
           stand.teilnehmer = Object.entries(snap.val() || {}).map(([uid, t]) =>
-            ({ uid, name: t.name || '', aktuelleStation: t.aktuelleStation || null, zuletzt: t.zuletzt || null }));
+            ({ uid, name: t.name || '', geraet: t.geraet || null, aktuelleStation: t.aktuelleStation || null, zuletzt: t.zuletzt || null }));
           melde();
         }, fehlerFn),
         D.onValue(ref('abgaben'), snap => { stand.abgaben = flach(snap.val()); melde(); }, fehlerFn),
@@ -174,6 +196,12 @@ async function rtdbSpeicher() {
     async allesLoeschen() {
       // ein Schreibvorgang über drei Pfade: alles oder nichts
       await schreib(D.update(ref('/'), { teilnehmer: null, abgaben: null, entwuerfe: null }));
+    },
+
+    async loescheTeilnehmer(uid) {
+      await schreib(D.update(ref('/'), {
+        [`teilnehmer/${uid}`]: null, [`abgaben/${uid}`]: null, [`entwuerfe/${uid}`]: null,
+      }));
     },
   };
 }
@@ -219,7 +247,7 @@ async function firestoreSpeicher() {
       if (user && !user.isAnonymous) { await A.signOut(auth); user = null; }
       if (!user) user = (await mitZeitlimit(A.signInAnonymously(auth))).user;
       await mitZeitlimit(F.setDoc(F.doc(db, 'teilnehmer', user.uid), {
-        name, aktuelleStation: null, zuletzt: F.serverTimestamp(),
+        name, geraet: geraetCode(), aktuelleStation: null, zuletzt: F.serverTimestamp(),
       }, { merge: true }));
       ich = { uid: user.uid, name };
       return ich;
@@ -245,8 +273,12 @@ async function firestoreSpeicher() {
     async setzeAktuelleStation(stationId) {
       if (!ich) return;
       await F.setDoc(F.doc(db, 'teilnehmer', ich.uid), {
-        name: ich.name, aktuelleStation: stationId, zuletzt: F.serverTimestamp(),
+        name: ich.name, geraet: geraetCode(), aktuelleStation: stationId, zuletzt: F.serverTimestamp(),
       }, { merge: true });
+    },
+
+    beobachteMich(callback) {
+      return F.onSnapshot(F.doc(db, 'teilnehmer', ich.uid), snap => callback(snap.exists()), () => {});
     },
 
     async speichereEntwurf(stationId, antworten, beantwortet, von) {
@@ -292,7 +324,7 @@ async function firestoreSpeicher() {
         F.onSnapshot(F.collection(db, 'teilnehmer'), snap => {
           stand.teilnehmer = snap.docs.map(d => {
             const t = lies(d);
-            return { uid: d.id, name: t.name || '', aktuelleStation: t.aktuelleStation || null, zuletzt: ms(t.zuletzt) };
+            return { uid: d.id, name: t.name || '', geraet: t.geraet || null, aktuelleStation: t.aktuelleStation || null, zuletzt: ms(t.zuletzt) };
           });
           melde();
         }, fehler),
@@ -317,6 +349,16 @@ async function firestoreSpeicher() {
           await batch.commit();
         }
       }
+    },
+
+    async loescheTeilnehmer(uid) {
+      const batch = F.writeBatch(db);
+      batch.delete(F.doc(db, 'teilnehmer', uid));
+      for (const name of ['abgaben', 'entwuerfe']) {
+        const snap = await F.getDocs(F.query(F.collection(db, name), F.where('uid', '==', uid)));
+        snap.docs.forEach(d => batch.delete(d.ref));
+      }
+      await batch.commit();
     },
   };
 }
@@ -363,7 +405,7 @@ function demoSpeicher() {
         try { localStorage.setItem(UID_KEY, uid); } catch { /* ohne Speicher bleibt es bei dieser Sitzung */ }
       }
       const db = lese();
-      db.teilnehmer[uid] = { ...(db.teilnehmer[uid] || {}), name, aktuelleStation: null, zuletzt: Date.now() };
+      db.teilnehmer[uid] = { ...(db.teilnehmer[uid] || {}), name, geraet: geraetCode(), aktuelleStation: null, zuletzt: Date.now() };
       schreibe(db);
       ich = { uid, name };
       return ich;
@@ -385,8 +427,13 @@ function demoSpeicher() {
     async setzeAktuelleStation(stationId) {
       if (!ich) return;
       const db = lese();
-      db.teilnehmer[ich.uid] = { ...(db.teilnehmer[ich.uid] || {}), name: ich.name, aktuelleStation: stationId, zuletzt: Date.now() };
+      db.teilnehmer[ich.uid] = { ...(db.teilnehmer[ich.uid] || {}), name: ich.name, geraet: geraetCode(), aktuelleStation: stationId, zuletzt: Date.now() };
       schreibe(db);
+    },
+
+    beobachteMich(callback) {
+      const uid = ich.uid;
+      return beobachte(() => callback(!!lese().teilnehmer[uid]));
     },
 
     async speichereEntwurf(stationId, antworten, beantwortet, von) {
@@ -432,6 +479,15 @@ function demoSpeicher() {
 
     async allesLoeschen() {
       schreibe({ teilnehmer: {}, abgaben: {}, entwuerfe: {} });
+    },
+
+    async loescheTeilnehmer(uid) {
+      const db = lese();
+      delete db.teilnehmer[uid];
+      for (const name of ['abgaben', 'entwuerfe']) {
+        Object.keys(db[name]).forEach(k => { if (k.startsWith(uid + '_')) delete db[name][k]; });
+      }
+      schreibe(db);
     },
   };
 }

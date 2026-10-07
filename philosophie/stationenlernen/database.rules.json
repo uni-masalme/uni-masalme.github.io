@@ -9,6 +9,7 @@
         ".validate": "newData.hasChildren(['name', 'zuletzt'])",
         "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 40" },
         "aktuelleStation": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "geraet": { ".validate": "newData.isString() && newData.val().length <= 8" },
         "zuletzt": { ".validate": "newData.val() === now" },
         "$sonst": { ".validate": false }
       }

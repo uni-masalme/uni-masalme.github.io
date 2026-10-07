@@ -56,7 +56,7 @@ body{margin:0; background:var(--grund); color:var(--ink);
   padding:3px 10px; border-radius:99px; border:1.3px solid var(--blau); color:var(--blau); margin-bottom:6px}
 .marke.voll{background:var(--blau); color:#fff}
 .karte h3{font-family:'DM Serif Display',Georgia,serif; font-weight:400; font-size:26px; line-height:1.15;
-  color:var(--blau); margin:0}
+  color:var(--blau); margin:0; -webkit-hyphens:auto; hyphens:auto; overflow-wrap:break-word}
 .karte p{margin:0; font-size:15px; color:var(--ink-2)}
 .pfeil{margin-top:auto; padding-top:14px; display:flex; align-items:center; gap:8px; font-size:13px;
   font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--petrol); transition:gap .15s}

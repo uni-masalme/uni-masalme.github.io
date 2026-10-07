@@ -48,10 +48,11 @@ Der `apiKey` in `config.js` ist kein Geheimnis, er steht bei jeder Firebase-Webs
 ## In der Stunde
 
 1. *Auswertung* öffnen, anmelden, **Link & QR-Code** auf den Beamer.
-2. Die Klasse meldet sich mit dem Vornamen an. Der Laufzettel verlangt alle Pflichtstationen und mindestens zwei Wahlstationen. Die Zahl steht als `mindestWahl` in `js/stationen.js`.
+2. Die Klasse meldet sich mit dem Vornamen an. Der Laufzettel verlangt alle drei Pflichtstationen und mindestens eine Wahlstation. Die Zahl steht als `mindestWahl` in `js/stationen.js`. Jede Station hat sechs Aufgaben, das Quiz dreizehn Fragen.
 3. Die Matrix zeigt live: ✓ abgegeben (mit Punkten), ✎ angefangen (bearbeitete Aufgaben, zum Beispiel 2/4), ● gerade geöffnet. Darunter steht bei jedem Namen, wo die Person gerade ist und wann sie zuletzt aktiv war. Ein Klick auf den Namen zeigt alle Eingaben, auch die noch nicht abgegebenen. Die Zwischenstände werden etwa alle drei Sekunden übertragen, und die Schülerinnen und Schüler sehen unter jeder Station den Hinweis, dass die Lehrkraft mitlesen kann.
 4. Für die Besprechung: Eine Stationsnummer anklicken zeigt die Verteilung bei Ankreuz- und Abstimmungsaufgaben und alle Freitexte. Vorher **Namen ausblenden** einschalten, wenn es an den Beamer geht.
-5. Nach der Stunde **CSV** herunterladen (öffnet sich in Excel, mit Spalte *Status*: abgegeben / in Arbeit) und dann **Alles löschen**.
+5. Die letzten 20 Minuten gehören der Besprechung der Pflichtstationen. Dafür in der Auswertung **Besprechung** öffnen. Die Ansicht zeigt die Ergebnisse der Pflichtstationen groß und immer ohne Namen, oben lassen sich die Stationen umschalten.
+6. Nach der Stunde **CSV** herunterladen (öffnet sich in Excel, mit Spalte *Status*: abgegeben / in Arbeit) und dann **Alles löschen**.
 
 Entwürfe speichert jedes Gerät für sich zwischen. Ein versehentliches Neuladen kostet also nichts. Nach dem Abgeben ist die Station gesperrt, und die Lösungen werden angezeigt.
 
@@ -76,3 +77,11 @@ python -m http.server 8765
 ```
 
 Dann `http://localhost:8765/philosophie/stationenlernen/` öffnen.
+
+## Gerätecode und unpassende Namen
+
+Safari gibt den Namen eines iPads („iPad von …“) nicht an Webseiten heraus. Deshalb bekommt jedes Gerät beim ersten Öffnen einen festen Code aus vier Zeichen, zum Beispiel `K7F2`. Er steht klein auf der Schülerseite neben dem Namen und bleibt gleich, auch wenn sich jemand ab- und mit einem anderen Namen wieder anmeldet. Nur wer die Website-Daten in Safari löscht, bekommt einen neuen Code.
+
+In der Auswertung steht der Code unter jedem Namen. Wurden auf einem Gerät mehrere Namen benutzt, erscheint ein Hinweis mit allen Namen. Ein Klick auf den Namen öffnet die Person, dort lässt sich der Eintrag mit **Diesen Eintrag löschen** entfernen. Das iPad springt dann zurück zur Namenseingabe.
+
+Die Regeln in `database.rules.json` erlauben das Feld `geraet`. Wer die Regeln aus einer älteren Fassung eingefügt hat, muss sie neu einfügen, sonst scheitert die Anmeldung.
