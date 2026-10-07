@@ -78,7 +78,7 @@ details.material .karte{margin-bottom:10px}
 .warnkarte .label{color:var(--nein)}
 .loeschkarte{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
 
-/* Besprechung am Beamer: größere Schrift, keine Namen */
+/* Vorstellungsmodus am Beamer: größere Schrift, keine Namen */
 .reiterleiste{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px}
 .reiter{padding:8px 16px; border-radius:99px; border:1.4px solid var(--rahmen); background:var(--karte);
   color:var(--blau); font-weight:600; font-size:15px; text-decoration:none}
@@ -89,3 +89,9 @@ details.material .karte{margin-bottom:10px}
 .besprechung .b-text, .besprechung .b-zahl{font-size:18px}
 .besprechung .antworten li{font-size:19px}
 .besprechung .karte p{font-size:19px}
+.reiter small{ font-weight:400; opacity:.75 }
+.klein-reiter{ align-items:center; margin-top:-12px }
+.klein-reiter .reiter{ padding:5px 12px; font-size:13px }
+.ohne-fehler{ background:var(--ok-bg); border-color:var(--gruen) }
+.ohne-fehler .label{ color:var(--ok) }
+.besprechung .a-kopf .urteil{ font-size:15px }

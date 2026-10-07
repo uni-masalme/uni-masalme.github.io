@@ -17,6 +17,8 @@ let speicher = null;
 let stand = null;           // { teilnehmer: [], abgaben: [] }
 let stopDaten = null;
 let anonym = lese('stl-anonym') === '1';
+// Vorstellungsmodus für den Beamer: nur Gesamtergebnisse, keine Namen, keine Verwaltung
+let vorstellung = lese('stl-vorstellung') === '1';
 
 function lese(k) { try { return localStorage.getItem(k); } catch { return null; } }
 function merke(k, v) { try { localStorage.setItem(k, v); } catch { /* egal */ } }
@@ -162,10 +164,10 @@ function vorMinuten(ms) {
 /* ── Rahmen ── */
 function zeichne() {
   if (!stand) return;
-  const m = location.hash.match(/^#\/(station|person|besprechung)(?:\/([\w-]+))?/);
+  const m = location.hash.match(/^#\/(station|person)\/([\w-]+)/);
   const liste = personen();
   let inhalt;
-  if (m && m[1] === 'besprechung') inhalt = besprechungsAnsicht(m[2], liste);
+  if (vorstellung) inhalt = vorstellungsAnsicht(m && m[1] === 'station' ? m[2] : null, liste);
   else if (m && m[1] === 'station' && STATIONEN.some(s => s.id === m[2])) inhalt = stationsAnsicht(STATIONEN.find(s => s.id === m[2]), liste);
   else if (m && m[1] === 'person' && liste.some(p => p.uid === m[2])) inhalt = personenAnsicht(liste.find(p => p.uid === m[2]));
   else inhalt = uebersicht(liste);
@@ -173,12 +175,17 @@ function zeichne() {
   // Live-Updates zeichnen neu: aufgeklappte Bereiche und Scrollposition behalten
   const offen = new Set([...app.querySelectorAll('details[open][data-key]')].map(d => d.dataset.key));
   const y = window.scrollY;
-  app.innerHTML = `
+  app.innerHTML = vorstellung ? `
+    <div class="kopfzeile">
+      <span><span class="live">● live</span> · Vorstellungsmodus, nur Gesamtergebnisse</span>
+      <span class="werkzeuge"><button class="knopf hell klein" id="vorstellung">Vorstellungsmodus beenden</button></span>
+    </div>
+    ${inhalt}` : `
     <div class="kopfzeile">
       <span><a class="link" href="./${location.search}">‹ Schülerseite</a> · <span class="live">● live</span></span>
       <span class="werkzeuge">
         <label class="schalter"><input type="checkbox" id="anonym" ${anonym ? 'checked' : ''}> Namen ausblenden</label>
-        <a class="knopf hell klein" href="#/besprechung">Besprechung</a>
+        <button class="knopf klein" id="vorstellung">Vorstellungsmodus</button>
         <button class="knopf hell klein" id="qr">Link &amp; QR-Code</button>
         <button class="knopf hell klein" id="csv">CSV</button>
         <button class="knopf gefahr klein" id="loeschen">Alles löschen</button>
@@ -189,6 +196,15 @@ function zeichne() {
   app.querySelectorAll('details[data-key]').forEach(d => { if (offen.has(d.dataset.key)) d.open = true; });
   window.scrollTo(0, y);
 
+  document.getElementById('vorstellung').onclick = () => {
+    vorstellung = !vorstellung;
+    merke('stl-vorstellung', vorstellung ? '1' : '0');
+    // Beim Einschalten mit der ersten Pflichtstation beginnen, beim Ausschalten zur Übersicht
+    const ziel = vorstellung ? `#/station/${STATIONEN.find(s => s.art === 'pflicht').id}` : '#/';
+    if (location.hash === ziel) zeichne(); else location.hash = ziel;
+    window.scrollTo(0, 0);
+  };
+  if (vorstellung) return;
   document.getElementById('anonym').onchange = e => { anonym = e.target.checked; merke('stl-anonym', anonym ? '1' : '0'); zeichne(); };
   document.getElementById('qr').onclick = zeigeQr;
   document.getElementById('csv').onclick = exportiereCsv;
@@ -279,6 +295,7 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
   let aufgabenNr = 0;
   const bloecke = alleAufgaben(station).map(a => {
     const nummer = ++aufgabenNr;
+    let fehlerquote = null;   // nur bei Aufgaben mit Lösung
     const werte = abg.map(x => ({ x, w: (x.antworten || {})[a.id] }));
     let koerper = '';
 
@@ -294,6 +311,7 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
       koerper = a.optionen.map((o, i) => balken(o, zaehl[i], beantwortet, richtige.includes(i))).join('');
       if (richtige.length && n) {
         const ok = abg.filter(x => bewerte(station, x.antworten || {}).je[a.id]?.richtig).length;
+        fehlerquote = 1 - ok / n;
         koerper = `<p class="quote"><b>${ok} von ${n}</b> richtig</p>` + koerper;
       }
       if (a.typ === 'abstimmung' && a.begruendung) {
@@ -306,15 +324,21 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
     }
 
     if (a.typ === 'zuordnen') {
-      koerper = a.elemente.map((e, i) => {
+      let okSumme = 0, gesamtSumme = 0;
+      const zeilen = a.elemente.map((e, i) => {
         const gewaehlt = werte.map(({ w }) => zuordnung(w, a.elemente.length)[i]).filter(Number.isInteger);
         const ok = gewaehlt.filter(k => k === e.richtig).length;
+        okSumme += ok; gesamtSumme += gewaehlt.length;
         const falsch = {};
         gewaehlt.filter(k => k !== e.richtig).forEach(k => { falsch[k] = (falsch[k] || 0) + 1; });
         const haeufig = Object.entries(falsch).sort((x, y) => y[1] - x[1])[0];
-        return balken(`${e.text} → ${a.kategorien[e.richtig]}`, ok, gewaehlt.length) +
-          (haeufig ? `<p class="hinweis fehlgriff">Häufigster Fehler ist ${esc(a.kategorien[haeufig[0]])} (${haeufig[1]}×)</p>` : '');
-      }).join('');
+        return { quote: gewaehlt.length ? ok / gewaehlt.length : 1, html: balken(`${e.text} → ${a.kategorien[e.richtig]}`, ok, gewaehlt.length) +
+          (haeufig ? `<p class="hinweis fehlgriff">Häufigster Fehler ist ${esc(a.kategorien[haeufig[0]])} (${haeufig[1]}×)</p>` : '') };
+      });
+      if (gesamtSumme) fehlerquote = 1 - okSumme / gesamtSumme;
+      // Im Vorstellungsmodus die Aussagen mit den meisten Fehlern zuerst
+      if (besprechung) zeilen.sort((x, y) => x.quote - y.quote);
+      koerper = zeilen.map(z => z.html).join('');
       if (n) koerper = '<p class="hinweis">Die Balken zeigen, wie viele richtig zugeordnet haben.</p>' + koerper;
     }
 
@@ -325,10 +349,13 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
         : '<p class="hinweis">Noch keine Antworten.</p>';
     }
 
-    return `<section class="aufgabe">
-      <div class="a-kopf"><span class="nr">${nummer}</span><p class="a-text">${esc(a.auftrag)}</p></div>
-      ${koerper}</section>`;
-  }).join('');
+    const fehlerMarke = besprechung && fehlerquote !== null
+      ? `<span class="urteil ${fehlerquote > 0 ? 'nein' : 'ok'}">${fehlerquote > 0 ? `${Math.round(fehlerquote * 100)} % Fehler` : '✓ ohne Fehler'}</span>`
+      : '';
+    return { nummer, auftrag: a.auftrag, fehlerquote, html: `<section class="aufgabe">
+      <div class="a-kopf"><span class="nr">${nummer}</span><p class="a-text">${esc(a.auftrag)}</p>${fehlerMarke}</div>
+      ${koerper}</section>` };
+  });
 
   const hier = liste.filter(p => p.aktuelleStation === station.id && !p.abgaben[station.id]).length;
   const inArbeit = liste.filter(p => p.entwuerfe[station.id]);
@@ -337,14 +364,21 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
       <p>${inArbeit.map(p => `<a class="link" href="#/person/${p.uid}">${esc(p.anzeige)}</a> <span class="hinweis">(${p.entwuerfe[station.id].beantwortet}/${p.entwuerfe[station.id].von})</span>`).join(' · ')}</p>
     </div>` : '';
   if (besprechung) {
+    // Aufgaben mit Fehlern nach Fehlerquote, dann offene Aufgaben, fehlerfreie nur als Zeile
+    const mitFehlern = bloecke.filter(b => b.fehlerquote > 0).sort((x, y) => y.fehlerquote - x.fehlerquote);
+    const offen = bloecke.filter(b => b.fehlerquote === null);
+    const ohneFehler = bloecke.filter(b => b.fehlerquote === 0);
     return `
     <header class="kopf station-kopf">
       <p class="eyebrow">Station ${nr} · ${esc(station.bezug)}</p>
       <h1 class="titel">${esc(station.titel)}</h1>
       <div class="meta"><span>${n} Abgabe${n === 1 ? '' : 'n'}</span></div>
     </header>
+    ${n ? '' : '<div class="karte"><p>Zu dieser Station gibt es noch keine Abgaben.</p></div>'}
     ${renderMaterial(station)}
-    ${bloecke}`;
+    ${[...mitFehlern, ...offen].map(b => b.html).join('')}
+    ${ohneFehler.length ? `<div class="karte ohne-fehler"><div class="label">Ohne Fehler gelöst</div>
+      <p>${ohneFehler.map(b => `Aufgabe ${b.nummer}`).join(' · ')}</p></div>` : ''}`;
   }
   return `
     <div class="kopfzeile"><a class="link" href="#/">‹ Übersicht</a>
@@ -358,17 +392,21 @@ function stationsAnsicht(station, liste, { besprechung = false } = {}) {
     </header>
     <details class="karte material" data-key="material-${station.id}"><summary>Material der Station</summary>${renderMaterial(station)}</details>
     ${arbeitsListe}
-    ${bloecke}`;
+    ${bloecke.map(b => b.html).join('')}`;
 }
 
-/* ── Besprechung der Pflichtstationen am Beamer ── */
-function besprechungsAnsicht(stationId, liste) {
+/* ── Vorstellungsmodus am Beamer: Gesamtergebnisse ohne Namen ── */
+function vorstellungsAnsicht(stationId, liste) {
+  const station = STATIONEN.find(s => s.id === stationId) || STATIONEN.find(s => s.art === 'pflicht');
+  const reiter = s => {
+    const n = stand.abgaben.filter(a => a.stationId === s.id).length;
+    return `<a class="reiter${s.art === 'pflicht' ? '' : ' wahl'}${s === station ? ' an' : ''}" href="#/station/${s.id}">${stationNr(s.id)} · ${esc(s.titel)} <small>(${n})</small></a>`;
+  };
   const pflicht = STATIONEN.filter(s => s.art === 'pflicht');
-  const station = pflicht.find(s => s.id === stationId) || pflicht[0];
-  const reiter = pflicht.map(s => `<a class="reiter${s === station ? ' an' : ''}" href="#/besprechung/${s.id}">${stationNr(s.id)} · ${esc(s.titel)}</a>`).join('');
+  const wahl = STATIONEN.filter(s => s.art !== 'pflicht');
   return `
-    <div class="kopfzeile"><a class="link" href="#/">‹ Übersicht</a><span class="hinweis">Besprechung · ohne Namen</span></div>
-    <nav class="reiterleiste">${reiter}</nav>
+    <nav class="reiterleiste">${pflicht.map(reiter).join('')}</nav>
+    <nav class="reiterleiste klein-reiter"><span class="hinweis">Wahlstationen</span>${wahl.map(reiter).join('')}</nav>
     <div class="besprechung">${stationsAnsicht(station, liste, { besprechung: true })}</div>`;
 }
 
