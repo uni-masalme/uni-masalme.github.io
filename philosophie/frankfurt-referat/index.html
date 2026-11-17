@@ -28,7 +28,7 @@ document.addEventListener("keydown", function (e) {
   else if (k === "ArrowLeft" || k === "ArrowUp" || k === "PageUp" || k === "Backspace" || k === "p" || k === "P") { go(i - 1); e.preventDefault(); }
   else if (k === "Home") { go(0); e.preventDefault(); }
   else if (k === "End") { go(S.length - 1); e.preventDefault(); }
-  else if (k === "F5" || k === "f" || k === "F") {
+  else if (k === "f" || k === "F") {
     e.preventDefault();
     var d = document.documentElement;
     if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {});
